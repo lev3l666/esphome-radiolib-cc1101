@@ -1,0 +1,82 @@
+# based on https://github.com/dbuezas/esphome-cc1101
+
+substitutions:
+  # MQTT Credentials
+  mqtt_host: !secret mqtt_host
+  mqtt_remote_raw_topic: esphome/rawrf
+  
+esphome:
+  name: esp32-dev1
+  friendly_name: ESP32 Dev Work
+  libraries:
+    - RadioLib
+  includes:
+    - cc1101.h
+
+esp32:
+  board: esp32dev
+  framework:
+    #type: arduino
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_name
+  password: !secret wifi_pass
+  fast_connect: true
+#  power_save_mode: HIGH
+
+logger:
+  #level: VERBOSE
+  level: INFO
+  
+captive_portal:
+
+api:
+
+mqtt:
+  broker: ${mqtt_host}
+  id: mqtt_client
+
+web_server:
+  port: 80
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto my_sensor = new EH_CC1101(id(rf_transmitter));
+      App.register_component(my_sensor);
+      return {my_sensor};
+    sensors:
+      id: transceiver
+      internal: true
+
+remote_transmitter:
+  - id: rf_transmitter
+    pin:
+      number: 32 # This is GDO0
+      allow_other_uses: true
+    carrier_duty_percent: 100%
+
+remote_receiver:
+  - id: rf_receiver
+    idle: 100ms
+    pin:
+      number: 32 # This is GDO0
+      allow_other_uses: true
+    #dump: all
+
+    on_raw:
+      then:
+        - lambda: !lambda |-
+            std::string s;
+            for (int i=0; i<x.size()-1;i+=2) {
+              s+=str_sprintf("%d %d\n",x[i],-x[i+1]);
+            }
+            if (x.size()%2) s.append(str_sprintf("%d 10000\n",x.back()));
+            s.append(str_sprintf(";end\n"));
+            id(mqtt_client).publish("${mqtt_remote_raw_topic}", s);
+
+ota:
+  platform: esphome
+  on_begin:
+    - lambda: get_cc1101(transceiver).radio.standby();

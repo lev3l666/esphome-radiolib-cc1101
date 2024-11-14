@@ -13,6 +13,41 @@
 
 static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
+#include "esphome/components/spi/spi.h"
+
+#ifdef USE_ESP_IDF
+#include "hal/ESP-IDF/EspHal.h"
+class EH_RL_Hal : public EspHal {
+  public:
+    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : EspHal(0,0,0), spi(spi) {}
+#else
+#include "hal/Arduino/ArduinoHal.h"
+class EH_RL_Hal : public ArduinoHal {
+  public:
+    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : ArduinoHal(), spi(spi) {}
+
+#endif
+    void spiBegin() override {
+      // ESPHome will do it with SPIDevice
+    }
+    void spiEnd() override {
+      // ESPHome will do it with SPIDevice
+    }
+    void inline spiBeginTransaction() override {
+      spi->enable();
+    }
+    void inline spiEndTransaction() override {
+      spi->disable();
+    }
+
+    void spiTransfer(uint8_t* out, size_t len, uint8_t* in) override {
+      for(size_t i = 0; i < len; i++) {
+        in[i] = spi->transfer_byte(out[i]);
+      }
+    }
+
+    esphome::spi_device::SPIDeviceComponent* spi;
+};
 
 #define get_cc1101(id) (*((EH_CC1101*)id))
 
@@ -45,6 +80,7 @@ class EH_CC1101 : public PollingComponent, public Sensor {
     // Use Radiolib CC1101 direct receive ASK-OOK
 
     int state = radio.begin();
+    ESP_LOGD(TAG, "CC1101 setup begin state=%d", state);
 
     state|=radio.standby();
 
@@ -75,19 +111,19 @@ class EH_CC1101 : public PollingComponent, public Sensor {
 
     // start receiving onto GDO
     state|= radio.receiveDirectAsync();
-    ESP_LOGD(TAG, "CC1101 state=%d", state);
+    ESP_LOGD(TAG, "CC1101 setup end state=%d", state);
   }
 
  public:
   float _freq;
   CC1101 radio=NULL;
-
-  EH_CC1101(esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
+  
+  EH_CC1101(esphome::spi_device::SPIDeviceComponent* spi,esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
              float freq=433.92,float bandwidth=464,
-             int GDO0=32,int SCK=18, int MISO=19, int MOSI=23, int CSN=5) : PollingComponent(100) {
+             int GDO0=32) : PollingComponent(100) {
 
-    hal = new EH_RL_Hal(SCK, MISO, MOSI);
-    radio = new Module(hal,CSN, GDO0,RADIOLIB_NC);
+    hal = new EH_RL_Hal(spi);
+    radio = new Module(hal,RADIOLIB_NC, GDO0,RADIOLIB_NC);
 
     _bandwidth = bandwidth;
     _freq = freq;

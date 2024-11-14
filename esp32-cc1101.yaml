@@ -19,8 +19,10 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    #type: arduino
+    # right now only esp-idf works on esp32...
     type: esp-idf
+    # still need to work around arduino hal SPI dependency in radiolib ...
+    # type: arduino
 
 wifi:
   ssid: !secret wifi_name
@@ -43,16 +45,30 @@ mqtt:
 web_server:
   port: 80
 
+spi:
+  # these are the default VSPI pins to use on ESP32
+  clk_pin: 18
+  mosi_pin: 23
+  miso_pin: 19
+
+spi_device:
+  id: cc1101_spi
+  cs_pin: 5 # any gpio than can pulldown should work
+  data_rate: 2MHz
+  spi_mode: 0
+  bit_order: msb_first
+
 sensor:
   - platform: custom
     lambda: |-
-      auto my_sensor = new EH_CC1101(id(rf_transmitter));
+      auto my_sensor = new EH_CC1101(id(cc1101_spi),id(rf_transmitter));
       App.register_component(my_sensor);
       return {my_sensor};
     sensors:
       id: transceiver
       internal: true
 
+    
 remote_transmitter:
   - id: rf_transmitter
     pin:

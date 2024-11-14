@@ -11,12 +11,38 @@
 #define RADIOLIB_LOW_LEVEL 1
 #include <RadioLib.h>
 
-#ifdef USE_ESP_IDF
-#include "hal/ESP-IDF/EspHal.h"
-#endif
-
 static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
+#include "esphome/components/spi/spi.h"
+
+#include "hal/ESP-IDF/EspHal.h"
+class EH_RL_Hal : public EspHal {
+  public:
+    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : EspHal(0,0,0), spi(spi) {}
+
+    void spiBegin() override {
+      // ESPHome will do it with SPIDevice
+    }
+    void spiEnd() override {
+      // ESPHome will do it with SPIDevice
+    }
+    void inline spiBeginTransaction() override {
+      ESP_LOGD(TAG, "CC1101 spi enable");
+      spi->enable();
+    }
+    void inline spiEndTransaction() override {
+      ESP_LOGD(TAG, "CC1101 spi disable");
+      spi->disable();
+    }
+
+    void spiTransfer(uint8_t* out, size_t len, uint8_t* in) override {
+      for(size_t i = 0; i < len; i++) {
+        in[i] = spi->transfer_byte(out[i]);
+      }
+    }
+
+    esphome::spi_device::SPIDeviceComponent* spi;
+};
 
 #define get_cc1101(id) (*((EH_CC1101*)id))
 
@@ -29,7 +55,7 @@ class EH_CC1101 : public PollingComponent, public Sensor {
   float _bandwidth=58;
   esphome::remote_transmitter::RemoteTransmitterComponent* _remote_transmitter;
   int _last_rssi = 0;
-  EspHal* hal;
+  EH_RL_Hal* hal;
 
   void setup() {
     // Use Radiolib CC1101 direct receive ASK-OOK
@@ -71,17 +97,13 @@ class EH_CC1101 : public PollingComponent, public Sensor {
  public:
   float _freq;
   CC1101 radio=NULL;
-
-  EH_CC1101(esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
+  
+  EH_CC1101(esphome::spi_device::SPIDeviceComponent* spi,esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
              float freq=433.92,float bandwidth=464,
-             int GDO0=32,int SCK=18, int MISO=19, int MOSI=23, int CSN=5) : PollingComponent(100) {
+             int GDO0=32) : PollingComponent(100) {
 
-    #ifdef USE_ESP_IDF
-    hal = new EspHal(SCK, MISO, MOSI);
-    radio = new Module(hal,CSN, GDO0,RADIOLIB_NC);
-    #else
-    radio = new Module(CSN, GDO0,RADIOLIB_NC);
-    #endif
+    hal = new EH_RL_Hal(spi);
+    radio = new Module(hal,RADIOLIB_NC, GDO0,RADIOLIB_NC);
 
     _bandwidth = bandwidth;
     _freq = freq;

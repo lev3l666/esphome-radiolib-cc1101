@@ -10,6 +10,9 @@ esphome:
   friendly_name: ESP32 Dev Work
   libraries:
     - RadioLib
+    # Needed for Arduino
+    # - SPI
+
   includes:
     - cc1101.h
 

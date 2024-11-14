@@ -11,14 +11,24 @@
 #define RADIOLIB_LOW_LEVEL 1
 #include <RadioLib.h>
 
-#ifdef USE_ESP_IDF
-#include "hal/ESP-IDF/EspHal.h"
-#endif
-
 static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
 
 #define get_cc1101(id) (*((EH_CC1101*)id))
+
+#ifdef USE_ESP_IDF
+#include "hal/ESP-IDF/EspHal.h"
+class EH_RL_Hal : public EspHal {
+  public:
+    EH_RL_Hal(int8_t sck, int8_t miso, int8_t mosi) : EspHal(sck,miso,mosi) {}
+};
+#else
+#include "hal/Arduino/ArduinoHal.h"
+class EH_RL_Hal : public ArduinoHal {
+  public:
+    EH_RL_Hal(int8_t sck, int8_t miso, int8_t mosi) : ArduinoHal() {}
+};
+#endif
 
 class EH_CC1101 : public PollingComponent, public Sensor {
   int _SCK;
@@ -29,7 +39,7 @@ class EH_CC1101 : public PollingComponent, public Sensor {
   float _bandwidth=58;
   esphome::remote_transmitter::RemoteTransmitterComponent* _remote_transmitter;
   int _last_rssi = 0;
-  EspHal* hal;
+  EH_RL_Hal* hal;
 
   void setup() {
     // Use Radiolib CC1101 direct receive ASK-OOK
@@ -76,12 +86,8 @@ class EH_CC1101 : public PollingComponent, public Sensor {
              float freq=433.92,float bandwidth=464,
              int GDO0=32,int SCK=18, int MISO=19, int MOSI=23, int CSN=5) : PollingComponent(100) {
 
-    #ifdef USE_ESP_IDF
-    hal = new EspHal(SCK, MISO, MOSI);
+    hal = new EH_RL_Hal(SCK, MISO, MOSI);
     radio = new Module(hal,CSN, GDO0,RADIOLIB_NC);
-    #else
-    radio = new Module(CSN, GDO0,RADIOLIB_NC);
-    #endif
 
     _bandwidth = bandwidth;
     _freq = freq;

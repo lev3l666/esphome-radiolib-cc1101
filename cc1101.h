@@ -51,20 +51,6 @@ class EH_RL_Hal : public ArduinoHal {
 
 #define get_cc1101(id) (*((EH_CC1101*)id))
 
-#ifdef USE_ESP_IDF
-#include "hal/ESP-IDF/EspHal.h"
-class EH_RL_Hal : public EspHal {
-  public:
-    EH_RL_Hal(int8_t sck, int8_t miso, int8_t mosi) : EspHal(sck,miso,mosi) {}
-};
-#else
-#include "hal/Arduino/ArduinoHal.h"
-class EH_RL_Hal : public ArduinoHal {
-  public:
-    EH_RL_Hal(int8_t sck, int8_t miso, int8_t mosi) : ArduinoHal() {}
-};
-#endif
-
 class EH_CC1101 : public PollingComponent, public Sensor {
   int _SCK;
   int _MISO;
@@ -119,11 +105,10 @@ class EH_CC1101 : public PollingComponent, public Sensor {
   CC1101 radio=NULL;
   
   EH_CC1101(esphome::spi_device::SPIDeviceComponent* spi,esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
-             float freq=433.92,float bandwidth=464,
-             int GDO0=32) : PollingComponent(100) {
+             float freq=433.92,float bandwidth=464) : PollingComponent(100) {
 
     hal = new EH_RL_Hal(spi);
-    radio = new Module(hal,RADIOLIB_NC, GDO0,RADIOLIB_NC);
+    radio = new Module(hal,RADIOLIB_NC, RADIOLIB_NC,RADIOLIB_NC);
 
     _bandwidth = bandwidth;
     _freq = freq;

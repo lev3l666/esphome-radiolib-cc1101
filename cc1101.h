@@ -15,11 +15,18 @@ static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
 #include "esphome/components/spi/spi.h"
 
+#ifdef USE_ESP_IDF
 #include "hal/ESP-IDF/EspHal.h"
 class EH_RL_Hal : public EspHal {
   public:
     EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : EspHal(0,0,0), spi(spi) {}
+#else
+#include "hal/Arduino/ArduinoHal.h"
+class EH_RL_Hal : public ArduinoHal {
+  public:
+    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : ArduinoHal(), spi(spi) {}
 
+#endif
     void spiBegin() override {
       // ESPHome will do it with SPIDevice
     }
@@ -27,11 +34,9 @@ class EH_RL_Hal : public EspHal {
       // ESPHome will do it with SPIDevice
     }
     void inline spiBeginTransaction() override {
-      ESP_LOGD(TAG, "CC1101 spi enable");
       spi->enable();
     }
     void inline spiEndTransaction() override {
-      ESP_LOGD(TAG, "CC1101 spi disable");
       spi->disable();
     }
 
@@ -61,6 +66,7 @@ class EH_CC1101 : public PollingComponent, public Sensor {
     // Use Radiolib CC1101 direct receive ASK-OOK
 
     int state = radio.begin();
+    ESP_LOGD(TAG, "CC1101 setup begin state=%d", state);
 
     state|=radio.standby();
 
@@ -91,7 +97,7 @@ class EH_CC1101 : public PollingComponent, public Sensor {
 
     // start receiving onto GDO
     state|= radio.receiveDirectAsync();
-    ESP_LOGD(TAG, "CC1101 state=%d", state);
+    ESP_LOGD(TAG, "CC1101 setup end state=%d", state);
   }
 
  public:

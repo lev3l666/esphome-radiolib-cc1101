@@ -8,18 +8,25 @@ substitutions:
 esphome:
   name: esp32-dev1
   friendly_name: ESP32 Dev Work
+
+  platformio_options:
+    build_flags:
+      # currently required for arduino platform (benign for esp-idf)
+      - '-DRADIOLIB_BUILD_GENERIC'
+
   libraries:
-    - RadioLib
+    # override version only needed for arduino platform right now
+    - RadioLib=https://github.com/juanboro/RadioLib
 
   includes:
+    - EHRLHal.h
     - cc1101.h
 
 esp32:
   board: esp32dev
   framework:
-    # right now only esp-idf works on esp32...
     type: esp-idf
-    #type: arduino
+#    type: arduino
 
 wifi:
   ssid: !secret wifi_name
@@ -50,11 +57,12 @@ spi:
 
 spi_device:
   id: cc1101_spi
-  cs_pin: 5 # any gpio than can pulldown should work
+  cs_pin: 5 # any gpio than can pulldown should work fine
   data_rate: 2MHz
   spi_mode: 0
   bit_order: msb_first
 
+# add the CC1101 as a custom sensor
 sensor:
   - platform: custom
     lambda: |-
@@ -64,25 +72,18 @@ sensor:
     sensors:
       id: transceiver
       internal: true
-
     
-remote_transmitter:
-  - id: rf_transmitter
-    pin:
-      number: 32 # This is GDO0
-      allow_other_uses: true
-    carrier_duty_percent: 100%
-
 remote_receiver:
   - id: rf_receiver
     idle: 100ms
     pin:
-      number: 32 # This is GDO0
+      number: 32 # This is also GDO0
       allow_other_uses: true
     #dump: all
 
     on_raw:
       then:
+        # mqtt publish ook pulse data that rtl_433 can decode as input
         - lambda: !lambda |-
             std::string s;
             for (int i=0; i<x.size()-1;i+=2) {
@@ -91,6 +92,14 @@ remote_receiver:
             if (x.size()%2) s.append(str_sprintf("%d 10000\n",x.back()));
             s.append(str_sprintf(";end\n"));
             id(mqtt_client).publish("${mqtt_remote_raw_topic}", s);
+
+# not yet ready
+remote_transmitter:
+  - id: rf_transmitter
+    pin:
+      number: 32 # This is GDO0
+      allow_other_uses: true
+    carrier_duty_percent: 100%
 
 ota:
   platform: esphome

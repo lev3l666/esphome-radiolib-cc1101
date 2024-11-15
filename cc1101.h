@@ -2,6 +2,7 @@
 // https://github.com/dbuezas/esphome-cc1101
 // and https://github.com/NorthernMan54/rtl_433_ESP/blob/main/src/rtl_433_ESP.cpp
 // https://github.com/smartoctopus/RadioLib-esphome/blob/master/examples/CC1101/CC1101_Settings/CC1101_Settings.ino
+// https://github.com/mag1024/esphome-rtl433/
 
 #ifndef CC1101TRANSCEIVER_H
 #define CC1101TRANSCEIVER_H
@@ -9,54 +10,25 @@
 #include "esphome.h"
 
 #define RADIOLIB_LOW_LEVEL 1
-#include <RadioLib.h>
 
 static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
 #include "esphome/components/spi/spi.h"
 
-#ifdef USE_ESP_IDF
-#include "hal/ESP-IDF/EspHal.h"
-class EH_RL_Hal : public EspHal {
-  public:
-    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : EspHal(0,0,0), spi(spi) {}
-#else
-#include "hal/Arduino/ArduinoHal.h"
-class EH_RL_Hal : public ArduinoHal {
-  public:
-    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi) : ArduinoHal(), spi(spi) {}
-
+#ifdef yield
+// need due to: https://github.com/esphome/esphome/pull/2575
+#undef yield
+#undef delayMicroseconds
+#undef millis
+#undef micros
+#undef delay
 #endif
-    void spiBegin() override {
-      // ESPHome will do it with SPIDevice
-    }
-    void spiEnd() override {
-      // ESPHome will do it with SPIDevice
-    }
-    void inline spiBeginTransaction() override {
-      spi->enable();
-    }
-    void inline spiEndTransaction() override {
-      spi->disable();
-    }
 
-    void spiTransfer(uint8_t* out, size_t len, uint8_t* in) override {
-      for(size_t i = 0; i < len; i++) {
-        in[i] = spi->transfer_byte(out[i]);
-      }
-    }
-
-    esphome::spi_device::SPIDeviceComponent* spi;
-};
+#include "EHRLHal.h"
 
 #define get_cc1101(id) (*((EH_CC1101*)id))
 
 class EH_CC1101 : public PollingComponent, public Sensor {
-  int _SCK;
-  int _MISO;
-  int _MOSI;
-  int _CSN;
-  int _GDO0;  // TX and also RX
   float _bandwidth=58;
   esphome::remote_transmitter::RemoteTransmitterComponent* _remote_transmitter;
   int _last_rssi = 0;

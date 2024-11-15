@@ -6,7 +6,6 @@ Uses [Radiolib](https://github.com/jgromes/RadioLib) to enable CC1101 module as 
 # todo
 - Make it a proper [external compoenent](https://esphome.io/components/external_components ).
 - get transmit working
-- Create radiolib hal to use ESPHome SPI/hal.
 - verify esp8266 works
 - add sensors and controls
 # based on:

@@ -15,15 +15,6 @@ static const char *const TAG = "EH_CC1101";
 #include "esphome/components/remote_transmitter/remote_transmitter.h"
 #include "esphome/components/spi/spi.h"
 
-#ifdef yield
-// need due to: https://github.com/esphome/esphome/pull/2575
-#undef yield
-#undef delayMicroseconds
-#undef millis
-#undef micros
-#undef delay
-#endif
-
 #include "EHRLHal.h"
 
 #define get_cc1101(id) (*((EH_CC1101*)id))

@@ -5,6 +5,15 @@
 
 #include "esphome.h"
 
+#ifdef yield
+// need due to: https://github.com/esphome/esphome/pull/2575
+#undef yield
+#undef delayMicroseconds
+#undef millis
+#undef micros
+#undef delay
+#endif
+
 #include <RadioLib.h>
 
 // pretty much from EspHal.h / ArduinoHal.h

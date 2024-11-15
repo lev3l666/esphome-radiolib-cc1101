@@ -10,8 +10,6 @@ esphome:
   friendly_name: ESP32 Dev Work
   libraries:
     - RadioLib
-    # Needed for Arduino
-    # - SPI
 
   includes:
     - cc1101.h
@@ -21,8 +19,7 @@ esp32:
   framework:
     # right now only esp-idf works on esp32...
     type: esp-idf
-    # still need to work around arduino hal SPI dependency in radiolib ...
-    # type: arduino
+    #type: arduino
 
 wifi:
   ssid: !secret wifi_name

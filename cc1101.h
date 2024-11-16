@@ -21,11 +21,14 @@ static const char *const TAG = "EH_CC1101";
 
 class EH_CC1101 : public PollingComponent, public Sensor {
   float _bandwidth=58;
-  esphome::remote_transmitter::RemoteTransmitterComponent* _remote_transmitter;
   int _last_rssi = 0;
   EH_RL_Hal* hal;
+  InternalGPIOPin* _gd0_rx;
+  InternalGPIOPin* _gd0_tx;
 
+public:
   void setup() {
+ 
     // Use Radiolib CC1101 direct receive ASK-OOK
 
     int state = radio.begin();
@@ -59,15 +62,35 @@ class EH_CC1101 : public PollingComponent, public Sensor {
     state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0, 0xb2);
 
     // start receiving onto GDO
-    state|= radio.receiveDirectAsync();
+    state|= recv();
     ESP_LOGD(TAG, "CC1101 setup end state=%d", state);
   }
 
- public:
+  int standby() {
+    // standby state: gd0 is input, radio in standby
+    _gd0_rx->setup();
+    return(radio.standby());
+  }
+
+  int recv() {
+    // receive state: gd0 is input, radio doing receiveDirectAsync
+    _gd0_rx->setup();
+    return(radio.receiveDirectAsync());
+  }
+
+  int xmit() {
+    // xmit state: gd0 is output
+    // wip (need to test w/ sdr all is well)
+    //_gd0_tx->setup();
+    standby(); // wip
+    return(-1);
+  }
+
   float _freq;
   CC1101 radio=NULL;
   
-  EH_CC1101(esphome::spi_device::SPIDeviceComponent* spi,esphome::remote_transmitter::RemoteTransmitterComponent* remote_transmitter,
+  EH_CC1101(esphome::spi_device::SPIDeviceComponent* spi,
+             InternalGPIOPin* gd0_rx, InternalGPIOPin* gd0_tx, 
              float freq=433.92,float bandwidth=464) : PollingComponent(100) {
 
     hal = new EH_RL_Hal(spi);
@@ -75,21 +98,11 @@ class EH_CC1101 : public PollingComponent, public Sensor {
 
     _bandwidth = bandwidth;
     _freq = freq;
-    _remote_transmitter = remote_transmitter;
+    _gd0_rx=gd0_rx;
+    _gd0_tx=gd0_tx;
 
   } 
 
-  void beginTransmission() {
-    // not ready yet
-    // pinMode(_GDO0, OUTPUT);
-    _remote_transmitter->setup();
-  }
-
-  void endTransmission() {
-    //not ready yet
-    //digitalWrite(_GDO0, 0);
-    //pinMode(_GDO0, INPUT);
-  }
   int setBW(float bandwidth) {
     // set to a valid value
     float possibles[16] = {58, 68, 81, 102, 116, 135, 162, 203, 232, 270, 325, 406, 464, 541, 650, 812};

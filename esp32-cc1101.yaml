@@ -66,7 +66,7 @@ spi_device:
 sensor:
   - platform: custom
     lambda: |-
-      auto my_sensor = new EH_CC1101(id(cc1101_spi),id(rf_transmitter));
+      auto my_sensor = new EH_CC1101(id(cc1101_spi),id(cc1101_gd0_recv),id(cc1101_gd0_xmit));
       App.register_component(my_sensor);
       return {my_sensor};
     sensors:
@@ -79,6 +79,8 @@ remote_receiver:
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true
+      id: cc1101_gd0_recv
+
     #dump: all
 
     on_raw:
@@ -93,15 +95,22 @@ remote_receiver:
             s.append(str_sprintf(";end\n"));
             id(mqtt_client).publish("${mqtt_remote_raw_topic}", s);
 
-# not yet ready
+# wip
 remote_transmitter:
   - id: rf_transmitter
     pin:
       number: 32 # This is GDO0
       allow_other_uses: true
+      id: cc1101_gd0_xmit
+    on_transmit:
+      then:
+        - lambda: get_cc1101(transceiver).xmit();
+    on_complete:
+      then:
+        - lambda: get_cc1101(transceiver).recv();
     carrier_duty_percent: 100%
 
 ota:
   platform: esphome
   on_begin:
-    - lambda: get_cc1101(transceiver).radio.standby();
+    - lambda: get_cc1101(transceiver).standby();

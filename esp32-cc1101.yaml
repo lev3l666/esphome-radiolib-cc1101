@@ -10,13 +10,10 @@ esphome:
   friendly_name: ESP32 Dev Work
 
   platformio_options:
-    build_flags:
-      # currently required for arduino platform (benign for esp-idf)
-      - '-DRADIOLIB_BUILD_GENERIC'
+    lib_ldf_mode: "deep+"
 
   libraries:
-    # override version only needed for arduino platform right now
-    - RadioLib=https://github.com/juanboro/RadioLib
+    - RadioLib
 
   includes:
     - EHRLHal.h
@@ -25,6 +22,7 @@ esphome:
 esp32:
   board: esp32dev
   framework:
+    # either work fine
     type: esp-idf
 #    type: arduino
 

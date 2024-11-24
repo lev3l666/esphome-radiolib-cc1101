@@ -20,38 +20,12 @@ void RadiolibCC1101Component::setup() {
   hal = new EH_RL_Hal(this);
   radio = new Module(hal,RADIOLIB_NC, RADIOLIB_NC,RADIOLIB_NC);
 
-  int state = radio.begin();
+  state = radio.begin();
   ESP_LOGD(TAG, "CC1101 setup begin state=%d", state);
 
-  state|=radio.standby();
+  // setup direct receive mode
+  setup_direct_mode();
 
-  state|=setFreq(_freq);
-  // datarate seems to be very crtitical to be around 5.0k -- intertwined with AGC settings from smartRC below
-  // see also DN022: https://www.ti.com/lit/an/swra215e/swra215e.pdf
-  state|=radio.setBitRate(5);
-
-  // set rx bw after datarate - and only specific ones work with radiolib...
-  state|=setBW(_bandwidth);
-
-  state|=radio.setOOK(true); // probably not necessary
-
-  // per DN022 adjust LNA as needed
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FREND1, (_bandwidth>101) ? 0xb6 : 0x56);
-  // also per DN022
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST2, (_bandwidth>325) ? 0x88 : 0x81);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST1, (_bandwidth>325) ? 0x31 : 0x35);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FIFOTHR, (_bandwidth>325) ? 0x07 : 0x47);
-
-  // AGC settings from: LSatan/SmartRC-CC1101-Driver-Lib
-  // They work well (possible to-do: add ability to dynamically modify in esphome)
-  // AGCCTRL2[7:6] reduce maximum available DVGA gain: disable top three gain setting
-  // AGCCTRL2[2:0] average amplitude target for filter: 42 dB
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL2, 0xc7); 
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL1, 0x00);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0, 0xb2);
-
-  // start receiving onto GDO
-  state|= recv();
   ESP_LOGD(TAG, "CC1101 setup end state=%d", state);
 
 }
@@ -64,27 +38,78 @@ void RadiolibCC1101Component::dump_config(){
     ESP_LOGCONFIG(TAG, "RadioLib-cc1101 component");
 }
 
+void RadiolibCC1101Component::set_registers() {
+  state|=radio.setFrequency(_freq);
+  state|=radio.setBitRate(_bitrate);
+  // set rx bw after datarate - and only specific ones make sense...
+  adjustBW(_bandwidth);
+  state|=radio.setRxBandwidth(_bandwidth);
+
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FREND1,_REG_FREND1);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST2,_REG_TEST2);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST1,_REG_TEST1);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FIFOTHR, _REG_FIFOTHR);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL2,_REG_AGCCTRL2);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL1,_REG_AGCCTRL1);
+  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0,_REG_AGCCTRL0);
+}
+
+void RadiolibCC1101Component::setup_direct_mode(bool adjustregisters) {
+  state|=standby();
+
+  if (adjustregisters) {
+    // per DN022 adjust LNA as needed
+    _REG_FREND1=(_bandwidth>101) ? 0xb6 : 0x56;
+    // also per DN022
+    _REG_TEST2= (_bandwidth>325) ? 0x88 : 0x81;
+    _REG_TEST1= (_bandwidth>325) ? 0x31 : 0x35;
+    _REG_FIFOTHR= (_bandwidth>325) ? 0x07 : 0x47;
+
+    // AGC settings from: LSatan/SmartRC-CC1101-Driver-Lib
+    // They work well (possible to-do: add ability to dynamically modify in esphome)
+    // AGCCTRL2[7:6] reduce maximum available DVGA gain: disable top three gain setting
+    // AGCCTRL2[2:0] average amplitude target for filter: 42 dB
+    // AGCCTRL1[6:6] LNA priority setting: LNA2 first
+    _REG_AGCCTRL2=0xc7;
+    _REG_AGCCTRL1=0x40;
+    _REG_AGCCTRL0=0xb2;
+  }
+
+  set_registers();
+
+  state|=radio.setOOK(true); // probably not necessary
+
+  // start receiving onto GDO
+  state|= recv();
+
+}
+
 int RadiolibCC1101Component::standby() {
   // standby state: gd0 is input, radio in standby
   _gd0_rx->setup();
-  return(radio.standby());
+  state|=radio.standby();
+  return(state);
 }
 
 int RadiolibCC1101Component::recv() {
   // receive state: gd0 is input, radio doing receiveDirectAsync
   _gd0_rx->setup();
-  return(radio.receiveDirectAsync());
+  state|=radio.receiveDirectAsync();
+  return(state);
 }
 
 int RadiolibCC1101Component::xmit() {
   // xmit state: gd0 is output
   // wip (need to test w/ sdr all is well)
-  //_gd0_tx->setup();
-  standby(); // wip
-  return(-1);
+  standby(); 
+  _gd0_tx->setup();
+
+  state|=radio.transmitDirectAsync();
+
+  return(state);
 }
 
-int RadiolibCC1101Component::setBW(float bandwidth) {
+void RadiolibCC1101Component::adjustBW(float bandwidth) {
   // set to a valid value
   float possibles[16] = {58, 68, 81, 102, 116, 135, 162, 203, 232, 270, 325, 406, 464, 541, 650, 812};
   for(int i=0;i<15;i++) {
@@ -93,12 +118,6 @@ int RadiolibCC1101Component::setBW(float bandwidth) {
       break;
     }
   }
-  return radio.setRxBandwidth(_bandwidth);
-}
-
-int RadiolibCC1101Component::setFreq(float freq) {
-  _freq=freq;
-  return radio.setFrequency(_freq);
 }
 
 }  // namespace radiolib_cc1101

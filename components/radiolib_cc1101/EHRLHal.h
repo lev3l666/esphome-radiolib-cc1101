@@ -18,11 +18,13 @@
 #define FALLING                     (0x02)
 #endif
 
+class EH_RL_SPI : public esphome::spi::SPIDevice<esphome::spi::BIT_ORDER_MSB_FIRST,esphome::spi::CLOCK_POLARITY_LOW, 
+                            esphome::spi::CLOCK_PHASE_LEADING,esphome::spi::DATA_RATE_2MHZ> {};
+
 class EH_RL_Hal : public RadioLibHal {
     public:
     // default constructor - initializes the base HAL and any needed private members
-    EH_RL_Hal(esphome::spi::SPIDevice<esphome::spi::BIT_ORDER_MSB_FIRST,esphome::spi::CLOCK_POLARITY_LOW, 
-                            esphome::spi::CLOCK_PHASE_LEADING,esphome::spi::DATA_RATE_2MHZ>* spi)
+    EH_RL_Hal(EH_RL_SPI* spi)
       : RadioLibHal(INPUT, OUTPUT, LOW, HIGH, RISING, FALLING), spi(spi) {}
 
     void init() override {

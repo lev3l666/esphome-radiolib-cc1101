@@ -1,0 +1,87 @@
+
+esphome:
+  name: esp8266-dev1
+  friendly_name: ESP8266 CC1101 testing
+
+  # to find SPI for radiolib
+  platformio_options:
+    lib_ldf_mode: "deep+" 
+
+  libraries:
+    - RadioLib
+
+esp8266:
+  board: nodemcu
+
+packages:
+  wifi: !include nodemcu_wifi.yaml
+
+logger:
+  level: VERBOSE
+#  level: INFO
+  
+captive_portal:
+
+api:
+
+web_server:
+  port: 80
+
+spi:
+  # these are the default SPI pins to use on ESP8266
+  clk_pin: D5   # CC1001 pin 5
+  mosi_pin: D7  # CC1001 pin 6
+  miso_pin: D6  # CC1001 pin 7
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+radiolib_cc1101:
+  id: mycc1101
+  cs_pin: D8 # # CC1101 pin 4
+  filter: 150khz
+  rx_pin:
+    number: D2 # # This is CC1101 GDO0 pin 3
+    allow_other_uses: true
+  tx_pin:
+    number: D2 # This is also GDO0
+    allow_other_uses: true
+
+remote_receiver:
+  - id: rf_receiver
+    idle: 100ms
+    pin:
+      number: D2 # This is also GDO0
+      allow_other_uses: true
+      id: cc1101_gd0_recv
+
+    dump: raw
+
+binary_sensor:
+  - platform: remote_receiver
+    name: "Govee Button Press"
+    raw: 
+      code: []
+
+
+# wip
+remote_transmitter:
+  - id: rf_transmitter
+    pin:
+      number: D2 # This is GDO0
+      allow_other_uses: true
+      id: cc1101_gd0_xmit
+    on_transmit:
+      then:
+        - lambda: id(mycc1101).xmit();
+    on_complete:
+      then:
+        - lambda: id(mycc1101).recv();
+    carrier_duty_percent: 100%
+
+ota:
+  platform: esphome
+  on_begin:
+    - lambda: id(mycc1101).standby();

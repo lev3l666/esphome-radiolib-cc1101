@@ -10,19 +10,15 @@ esphome:
   friendly_name: ESP32 Dev Work
 
   platformio_options:
-    lib_ldf_mode: "deep+"
+    lib_ldf_mode: "deep+" # only necessary for arduino platform
 
   libraries:
+    - rtl_433_Decoder_ESP=file:///home/jdkrause/github.com/rtl_433_Decoder_ESP
     - RadioLib
 
-  includes:
-    - EHRLHal.h
-    - cc1101.h
-
-esp32:
+esp32:  
   board: esp32dev
   framework:
-    # either work fine
     type: esp-idf
 #    type: arduino
 
@@ -33,7 +29,7 @@ wifi:
 #  power_save_mode: HIGH
 
 logger:
-  #level: VERBOSE
+#  level: VERBOSE
   level: INFO
   
 captive_portal:
@@ -49,28 +45,26 @@ web_server:
 
 spi:
   # these are the default VSPI pins to use on ESP32
-  clk_pin: 18
-  mosi_pin: 23
-  miso_pin: 19
+  clk_pin: 18   # CC1001 pin 5
+  mosi_pin: 23  # CC1001 pin 6
+  miso_pin: 19  # CC1001 pin 7
 
-spi_device:
-  id: cc1101_spi
-  cs_pin: 5 # any gpio than can pulldown should work fine
-  data_rate: 2MHz
-  spi_mode: 0
-  bit_order: msb_first
+external_components:
+  - source:
+      type: local
+      path: components
 
-# add the CC1101 as a custom sensor
-sensor:
-  - platform: custom
-    lambda: |-
-      auto my_sensor = new EH_CC1101(id(cc1101_spi),id(cc1101_gd0_recv),id(cc1101_gd0_xmit));
-      App.register_component(my_sensor);
-      return {my_sensor};
-    sensors:
-      id: transceiver
-      internal: true
-    
+radiolib_cc1101:
+  id: mycc1101
+  cs_pin: 5 # CC1101 pin 4
+  filter: 150khz
+  rx_pin:
+    number: 32 # This is CC1101 GDO0 pin 3
+    allow_other_uses: true
+  tx_pin:
+    number: 32 # This is also GDO0
+    allow_other_uses: true
+
 remote_receiver:
   - id: rf_receiver
     idle: 100ms
@@ -79,12 +73,12 @@ remote_receiver:
       allow_other_uses: true
       id: cc1101_gd0_recv
 
-    #dump: all
+#    dump: raw
 
     on_raw:
       then:
         # mqtt publish ook pulse data that rtl_433 can decode as input
-        - lambda: !lambda |-
+        - lambda: |-
             std::string s;
             for (int i=0; i<x.size()-1;i+=2) {
               s+=str_sprintf("%d %d\n",x[i],-x[i+1]);
@@ -102,13 +96,13 @@ remote_transmitter:
       id: cc1101_gd0_xmit
     on_transmit:
       then:
-        - lambda: get_cc1101(transceiver).xmit();
+        - lambda: id(mycc1101).xmit();
     on_complete:
       then:
-        - lambda: get_cc1101(transceiver).recv();
+        - lambda: id(mycc1101).recv();
     carrier_duty_percent: 100%
 
 ota:
   platform: esphome
   on_begin:
-    - lambda: get_cc1101(transceiver).standby();
+    - lambda: id(mycc1101).standby();

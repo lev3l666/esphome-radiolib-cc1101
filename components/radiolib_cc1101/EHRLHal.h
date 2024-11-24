@@ -3,16 +3,7 @@
 
 #define RADIOLIB_LOW_LEVEL 1
 
-#include "esphome.h"
-
-#ifdef yield
-// need due to: https://github.com/esphome/esphome/pull/2575
-#undef yield
-#undef delayMicroseconds
-#undef millis
-#undef micros
-#undef delay
-#endif
+#include "esphome/components/spi/spi.h"
 
 #include <RadioLib.h>
 
@@ -27,11 +18,11 @@
 #define FALLING                     (0x02)
 #endif
 
-
 class EH_RL_Hal : public RadioLibHal {
     public:
     // default constructor - initializes the base HAL and any needed private members
-    EH_RL_Hal(esphome::spi_device::SPIDeviceComponent* spi)
+    EH_RL_Hal(esphome::spi::SPIDevice<esphome::spi::BIT_ORDER_MSB_FIRST,esphome::spi::CLOCK_POLARITY_LOW, 
+                            esphome::spi::CLOCK_PHASE_LEADING,esphome::spi::DATA_RATE_2MHZ>* spi)
       : RadioLibHal(INPUT, OUTPUT, LOW, HIGH, RISING, FALLING), spi(spi) {}
 
     void init() override {
@@ -75,7 +66,8 @@ class EH_RL_Hal : public RadioLibHal {
       }
     }
 
-    esphome::spi_device::SPIDeviceComponent* spi;
+    esphome::spi::SPIDevice<esphome::spi::BIT_ORDER_MSB_FIRST,esphome::spi::CLOCK_POLARITY_LOW, 
+                            esphome::spi::CLOCK_PHASE_LEADING,esphome::spi::DATA_RATE_2MHZ>* spi;
 
     void inline yield() override {
       ::esphome::yield();

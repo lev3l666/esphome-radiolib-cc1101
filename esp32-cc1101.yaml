@@ -1,10 +1,17 @@
-# based on https://github.com/dbuezas/esphome-cc1101
-
 substitutions:
   # MQTT Credentials
   mqtt_host: !secret mqtt_host
   mqtt_remote_raw_topic: esphome/rawrf
-  
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+packages:
+  # optionally enable controls to set/observe state
+  cc1101_controls: !include cc1101-controls.yaml
+
 esphome:
   name: esp32-dev1
   friendly_name: ESP32 Dev Work
@@ -13,12 +20,12 @@ esphome:
     lib_ldf_mode: "deep+" # only necessary for arduino platform
 
   libraries:
-    - rtl_433_Decoder_ESP=file:///home/jdkrause/github.com/rtl_433_Decoder_ESP
     - RadioLib
 
 esp32:  
   board: esp32dev
   framework:
+    # change as necessary
     type: esp-idf
 #    type: arduino
 
@@ -26,15 +33,12 @@ wifi:
   ssid: !secret wifi_name
   password: !secret wifi_pass
   fast_connect: true
-#  power_save_mode: HIGH
 
 logger:
 #  level: VERBOSE
   level: INFO
   
 captive_portal:
-
-api:
 
 mqtt:
   broker: ${mqtt_host}
@@ -49,25 +53,25 @@ spi:
   mosi_pin: 23  # CC1001 pin 6
   miso_pin: 19  # CC1001 pin 7
 
-external_components:
-  - source:
-      type: local
-      path: components
-
 radiolib_cc1101:
   id: mycc1101
   cs_pin: 5 # CC1101 pin 4
-  filter: 150khz
   rx_pin:
     number: 32 # This is CC1101 GDO0 pin 3
     allow_other_uses: true
   tx_pin:
     number: 32 # This is also GDO0
     allow_other_uses: true
+  # other optional settings.. (use control settings to verify they work and then set)
+  filter: 468khz # RX filter BW (58-812kHz)
+  bitrate: 40 # bitrate (0.025-600kbps)
+  reg_agcctrl0: 0xb2 # agcctrol0 register setting
+  reg_agcctrl1: 0x00 # agcctrol1 register setting
+  reg_agcctrl2: 0xc7 # agcctrol2 register setting
 
 remote_receiver:
   - id: rf_receiver
-    idle: 100ms
+    idle: 10ms
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true
@@ -75,23 +79,37 @@ remote_receiver:
 
 #    dump: raw
 
+    # mqtt publish ook pulse data that rtl_433 can decode as input for debugging
+    # this will overwealm an esp8266, and is kinda hacky but works...
+    # on the receive side: 
+    # stdbuf -o0 mosquitto_sub  -h 192.168.74.1 -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-
     on_raw:
       then:
-        # mqtt publish ook pulse data that rtl_433 can decode as input
         - lambda: |-
-            std::string s;
-            for (int i=0; i<x.size()-1;i+=2) {
-              s+=str_sprintf("%d %d\n",x[i],-x[i+1]);
-            }
-            if (x.size()%2) s.append(str_sprintf("%d 10000\n",x.back()));
-            s.append(str_sprintf(";end\n"));
-            id(mqtt_client).publish("${mqtt_remote_raw_topic}", s);
+            int rawcount=x.size();
+            char buffer[512];
 
-# wip
+            int j=0;
+            char* bufp=buffer;
+            while (j<rawcount) {
+              if (x[j]>0) {
+                bufp+=sprintf(bufp,"%d %d\n",x[j],(j<rawcount-1) && (x[j+1]<0) ? -x[j+1] : 10000);
+                ++j;
+              }
+              ++j;
+
+              if ((bufp-buffer)>490) {
+                  id(mqtt_client).publish("${mqtt_remote_raw_topic}", buffer);
+                  bufp=buffer;
+              }
+            }
+            sprintf(bufp,";end\n");
+            id(mqtt_client).publish("${mqtt_remote_raw_topic}", buffer);
+
 remote_transmitter:
   - id: rf_transmitter
     pin:
-      number: 32 # This is GDO0
+      number: 32 # This is also GDO0
       allow_other_uses: true
       id: cc1101_gd0_xmit
     on_transmit:

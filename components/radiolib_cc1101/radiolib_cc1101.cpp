@@ -20,13 +20,13 @@ void RadiolibCC1101Component::setup() {
   hal = new EH_RL_Hal(this);
   radio = new Module(hal,RADIOLIB_NC, RADIOLIB_NC,RADIOLIB_NC);
 
-  state = radio.begin();
-  ESP_LOGD(TAG, "CC1101 setup begin state=%d", state);
+  init_state = radio.begin();
+  ESP_LOGD(TAG, "CC1101 setup begin init_state =%d", state);
 
   // setup direct receive mode
   setup_direct_mode();
 
-  ESP_LOGD(TAG, "CC1101 setup end state=%d", state);
+  ESP_LOGD(TAG, "CC1101 setup end init_state =%d", state);
 
 }
 
@@ -39,63 +39,54 @@ void RadiolibCC1101Component::dump_config(){
 }
 
 void RadiolibCC1101Component::set_registers() {
-  state|=radio.setFrequency(_freq);
-  state|=radio.setBitRate(_bitrate);
+  init_state|=radio.setFrequency(_freq);
+  init_state|=radio.setBitRate(_bitrate);
   // set rx bw after datarate - and only specific ones make sense...
   adjustBW(_bandwidth);
-  state|=radio.setRxBandwidth(_bandwidth);
+  init_state|=radio.setRxBandwidth(_bandwidth);
 
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FREND1,_REG_FREND1);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST2,_REG_TEST2);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST1,_REG_TEST1);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FIFOTHR, _REG_FIFOTHR);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL2,_REG_AGCCTRL2);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL1,_REG_AGCCTRL1);
-  state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0,_REG_AGCCTRL0);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FREND1,_REG_FREND1);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST2,_REG_TEST2);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_TEST1,_REG_TEST1);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_FIFOTHR, _REG_FIFOTHR);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL2,_REG_AGCCTRL2);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL1,_REG_AGCCTRL1);
+  init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0,_REG_AGCCTRL0);
 }
 
-void RadiolibCC1101Component::setup_direct_mode(bool adjustregisters) {
-  state|=standby();
+void RadiolibCC1101Component::setup_direct_mode() {
+  init_state|=standby();
 
-  if (adjustregisters) {
-    // per DN022 adjust LNA as needed
-    _REG_FREND1=(_bandwidth>101) ? 0xb6 : 0x56;
-    // also per DN022
-    _REG_TEST2= (_bandwidth>325) ? 0x88 : 0x81;
-    _REG_TEST1= (_bandwidth>325) ? 0x31 : 0x35;
-    _REG_FIFOTHR= (_bandwidth>325) ? 0x07 : 0x47;
-
-    // AGC settings from: LSatan/SmartRC-CC1101-Driver-Lib
-    // They work well (possible to-do: add ability to dynamically modify in esphome)
-    // AGCCTRL2[7:6] reduce maximum available DVGA gain: disable top three gain setting
-    // AGCCTRL2[2:0] average amplitude target for filter: 42 dB
-    // AGCCTRL1[6:6] LNA priority setting: LNA2 first
-    _REG_AGCCTRL2=0xc7;
-    _REG_AGCCTRL1=0x40;
-    _REG_AGCCTRL0=0xb2;
-  }
+  // per DN022 adjust LNA as needed
+  _REG_FREND1=(_bandwidth>101) ? 0xb6 : 0x56;
+  // also per DN022
+  _REG_TEST2= (_bandwidth>325) ? 0x88 : 0x81;
+  _REG_TEST1= (_bandwidth>325) ? 0x31 : 0x35;
+  _REG_FIFOTHR= (_bandwidth>325) ? 0x07 : 0x47;
 
   set_registers();
 
-  state|=radio.setOOK(true); // probably not necessary
+  init_state|=radio.setOOK(true); // probably not necessary
 
   // start receiving onto GDO
-  state|= recv();
+  init_state|= recv();
 
 }
 
 int RadiolibCC1101Component::standby() {
   // standby state: gd0 is input, radio in standby
   _gd0_rx->setup();
-  state|=radio.standby();
-  return(state);
+  init_state|=radio.standby();
+  state=init_state==0 ? CC1101_STANDBY : CC1101_NOINIT;
+  return init_state;
 }
 
 int RadiolibCC1101Component::recv() {
   // receive state: gd0 is input, radio doing receiveDirectAsync
   _gd0_rx->setup();
-  state|=radio.receiveDirectAsync();
-  return(state);
+  init_state|=radio.receiveDirectAsync();
+  state=init_state==0 ? CC1101_RECV : CC1101_NOINIT;
+  return init_state;
 }
 
 int RadiolibCC1101Component::xmit() {
@@ -104,9 +95,10 @@ int RadiolibCC1101Component::xmit() {
   standby(); 
   _gd0_tx->setup();
 
-  state|=radio.transmitDirectAsync();
+  init_state|=radio.transmitDirectAsync();
+  state=init_state==0 ? CC1101_XMIT : CC1101_NOINIT;
 
-  return(state);
+  return init_state;
 }
 
 void RadiolibCC1101Component::adjustBW(float bandwidth) {
@@ -118,6 +110,10 @@ void RadiolibCC1101Component::adjustBW(float bandwidth) {
       break;
     }
   }
+}
+
+float RadiolibCC1101Component::getRSSI() {
+  return state==CC1101_RECV ? radio.getRSSI() : -1;
 }
 
 }  // namespace radiolib_cc1101

@@ -19,7 +19,10 @@ CONFIG_SCHEMA = (
         cv.Required(CONF_TX_PIN): pins.internal_gpio_output_pin_schema,
         cv.Optional(CONF_FREQUENCY, default="433.92MHz"): cv.frequency,
         cv.Optional(CONF_FILTER, default="464kHz"): cv.frequency,
-        cv.Optional('bitrate',default=40): cv.float_range(0.025,600), # 40k = 25us resolution
+        cv.Optional('bitrate',default=5): cv.float_range(0.025,600), # 40k = 25us resolution, 5k=less noisy
+        cv.Optional('reg_agcctrl0',default=0xb2): cv.hex_uint8_t,
+        cv.Optional('reg_agcctrl1',default=0x00): cv.hex_uint8_t,
+        cv.Optional('reg_agcctrl2',default=0xc7): cv.hex_uint8_t,
         })
     .extend(cv.COMPONENT_SCHEMA)
     .extend(spi.spi_device_schema(cs_pin_required=True))
@@ -37,6 +40,9 @@ async def to_code(config):
     cg.add(var.set_frequency(config[CONF_FREQUENCY]))
     cg.add(var.set_filter(config[CONF_FILTER]))
     cg.add(var.set_bitrate(config['bitrate']))
+    cg.add(var.set_reg_agcctrl0(config['reg_agcctrl0']))
+    cg.add(var.set_reg_agcctrl1(config['reg_agcctrl1']))
+    cg.add(var.set_reg_agcctrl2(config['reg_agcctrl2']))
 
     await cg.register_component(var, config)
     await spi.register_spi_device(var, config)

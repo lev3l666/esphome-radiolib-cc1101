@@ -57,7 +57,14 @@ remote_receiver:
       number: D2 # This is also GDO0
       allow_other_uses: true
       id: cc1101_gd0_recv
+
     dump: raw
+
+    #on_raw:
+    # Note on_raw...
+    # The memory size of the esp8266 is VERY small, and on_raw can just crash on creating the integer vector on 
+    # the heap.  So really, outside of either using the rc switch decoding, or writing a custom decoder, receiving is
+    # pretty limited on the esp8266.
 
 remote_transmitter:
   - id: rf_transmitter

@@ -1,5 +1,19 @@
 number:
   - platform: template
+    id: cc1101_freq_num
+    name: "CC1101 frequency"
+    lambda: return id(mycc1101)._freq;
+    set_action: 
+      then:
+        - lambda: |-
+            id(mycc1101)._freq=x;
+            id(mycc1101).setup_direct_mode();
+            id(cc1101_freq_num).update();
+    min_value: 300.0
+    max_value: 928.0
+    step: 0.01
+    unit_of_measurement: MHz
+  - platform: template
     id: cc1101_bw_num
     name: "CC1101 filter bandwidth"
     lambda: return id(mycc1101)._bandwidth;

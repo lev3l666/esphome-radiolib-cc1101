@@ -1,13 +1,17 @@
-# wip
-Uses [Radiolib](https://github.com/jgromes/RadioLib) to enable CC1101 module as Esphome RF remote receiver/transmitter.
-# current example
+# esphome-radiolib-cc1101
+Uses [Radiolib](https://github.com/jgromes/RadioLib) to enable a TI-CC1101 module as an ESPHome RF direct OOK remote receiver/transmitter.
+# Basics
+The included yaml files include configuration examples for ESP8266 and ESP32 micro-controllers.  You should start by enabling dump_raw and making sure noise isn't being received when no transmissions are occurring.  Adjusting bandwidth, data-rate, and AGC parameters can help with creating an optimal receive setup.  The example includes the ability to expose these as controls in ESPHome or HomeAssistant.  
+- More bandwidth will likely enable receiving more varying devices on the same frequency, but will increase noise and decrease range.
+
+## debugging signals
+The ESP32 example includes an example mqtt dumper that can help with analyzing pulse data. 
 - Use rtl_433 to decode pulses streamed to mqtt:
 ```stdbuf -o0 mosquitto_sub  -h mqtthostname -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-```
-# todo
-- Make it a proper [external compoenent](https://esphome.io/components/external_components ).
-- get transmit working
-- verify esp8266 works
-- add sensors and controls
+
+## rtl_433 decoding with ESPHome
+See [esphome-rtl_433-decoder](https://github.com/juanboro/esphome-rtl_433-decoder)
+
 # based on:
 - https://github.com/dbuezas/esphome-cc1101
 - and https://github.com/NorthernMan54/rtl_433_ESP/blob/main/src/rtl_433_ESP.cpp

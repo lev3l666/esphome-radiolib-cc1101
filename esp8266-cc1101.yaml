@@ -11,8 +11,8 @@ esphome:
 
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/juanboro/esphome-radiolib-cc1101
 
 esp8266:
   board: nodemcu

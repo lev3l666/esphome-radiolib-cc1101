@@ -1,3 +1,7 @@
+# Sample Configuration File
+
+## enables CC1101 direct OOK receiver/transmit and creates a MQTT raw dumper
+
 substitutions:
   # MQTT Credentials
   mqtt_host: !secret mqtt_host
@@ -5,27 +9,27 @@ substitutions:
 
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/juanboro/esphome-radiolib-cc1101
 
 packages:
   # optionally enable controls to set/observe state
   cc1101_controls: !include cc1101-controls.yaml
 
+# Update as needed
 esphome:
   name: esp32-dev1
   friendly_name: ESP32 Dev Work
 
   platformio_options:
     lib_ldf_mode: "deep+" # only necessary for arduino platform
-
   libraries:
     - RadioLib
 
 esp32:  
   board: esp32dev
   framework:
-    # change as necessary
+    # change as necessary - i find esp-idf a little less erratic
     type: esp-idf
 #    type: arduino
 
@@ -80,9 +84,12 @@ remote_receiver:
 #    dump: raw
 
     # mqtt publish ook pulse data that rtl_433 can decode as input for debugging
-    # this will overwealm an esp8266, and is kinda hacky but works...
+    # this will overwhelm an esp8266, and is kinda hacky but works... it would be nice
+    # to know if there is a way to yield in esphome lambdas.  I'm guessing that would be
+    # quite difficult though.
+    #
     # on the receive side: 
-    # stdbuf -o0 mosquitto_sub  -h 192.168.74.1 -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-
+    # stdbuf -o0 mosquitto_sub  -h <mqtthost> -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-
     on_raw:
       then:
         - lambda: |-
@@ -114,7 +121,9 @@ remote_transmitter:
       id: cc1101_gd0_xmit
     on_transmit:
       then:
-        - lambda: id(mycc1101).xmit();
+        - lambda: |-
+            id(mycc1101).xmit();
+            id(rf_transmitter).setup();
     on_complete:
       then:
         - lambda: id(mycc1101).recv();

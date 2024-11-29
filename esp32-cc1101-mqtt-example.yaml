@@ -1,0 +1,70 @@
+packages:
+  esp32-cc1101: 
+      url: https://github.com/juanboro/esphome-radiolib-cc1101
+    files: [esp32-cc1101.yaml] 
+
+esphome:
+  name: esp32-cc1101-mqtt
+  friendly_name: ESP32 cc1101 mqtt dump example
+
+wifi:
+  ssid: !secret wifi_name
+  password: !secret wifi_pass
+  fast_connect: true
+
+esp32:  
+  board: esp32dev
+  framework:
+    # change as necessary - i find esp-idf a little less erratic
+    type: esp-idf
+#    type: arduino
+
+substitutions:
+  # MQTT Credentials
+  mqtt_host: !secret mqtt_host
+  mqtt_remote_raw_topic: esphome/rawrf
+
+logger:
+#  level: VERBOSE
+  level: INFO
+  
+captive_portal:
+
+mqtt:
+  broker: ${mqtt_host}
+  id: mqtt_client
+
+web_server:
+  port: 80
+
+remote_receiver:
+  - id: !extend rf_receiver
+    # mqtt publish ook pulse data that rtl_433 can decode as input for debugging
+    # this will overwhelm an esp8266, and is kinda hacky but works... it would be nice
+    # to know if there is a way to yield in esphome lambdas.  I'm guessing that would be
+    # quite difficult though.
+    #
+    # on the receive side: 
+    # stdbuf -o0 mosquitto_sub  -h <mqtthost> -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-
+    on_raw:
+      then:
+        - lambda: |-
+            int rawcount=x.size();
+            char buffer[512];
+
+            int j=0;
+            char* bufp=buffer;
+            while (j<rawcount) {
+              if (x[j]>0) {
+                bufp+=sprintf(bufp,"%d %d\n",x[j],(j<rawcount-1) && (x[j+1]<0) ? -x[j+1] : 10000);
+                ++j;
+              }
+              ++j;
+
+              if ((bufp-buffer)>490) {
+                  id(mqtt_client).publish("${mqtt_remote_raw_topic}", buffer);
+                  bufp=buffer;
+              }
+            }
+            sprintf(bufp,";end\n");
+            id(mqtt_client).publish("${mqtt_remote_raw_topic}", buffer);

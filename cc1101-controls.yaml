@@ -232,6 +232,12 @@ sensor:
     lambda: return id(mycc1101).getRSSI();
     update_interval: 10s
     unit_of_measurement: dB
+  - platform: template
+    id: cc1101_sensor_rx_rssi
+    name: "CC1101 Last RX RSSI"
+    lambda: return id(mycc1101).last_rx_rssi;
+    update_interval: 10s
+    unit_of_measurement: dB
 
 text_sensor:
   - platform: template

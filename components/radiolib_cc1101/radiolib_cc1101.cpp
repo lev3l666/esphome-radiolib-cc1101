@@ -31,7 +31,7 @@ void RadiolibCC1101Component::setup() {
 }
 
 void RadiolibCC1101Component::loop() {
-
+  if ((state==CC1101_RECV)&&(_gd0_rx->digital_read())) last_rx_rssi=getRSSI();
 }
 
 void RadiolibCC1101Component::dump_config(){

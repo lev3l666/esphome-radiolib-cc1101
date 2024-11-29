@@ -62,6 +62,9 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     InternalGPIOPin* _gd0_rx;
     InternalGPIOPin* _gd0_tx;
 
+    // For RSSI rx average
+    float last_rx_rssi=0;
+
   private:
     void adjustBW(float bandwidth); // rx filter bw snapper
 

@@ -59,8 +59,8 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
   // see also DN022: https://www.ti.com/lit/an/swra215e/swra215e.pdf
     int _bitrate=5;
 
-    InternalGPIOPin* _gd0_rx;
-    InternalGPIOPin* _gd0_tx;
+    InternalGPIOPin* _gd0_rx=nullptr;
+    InternalGPIOPin* _gd0_tx=nullptr;
 
     // For RSSI rx average
     float last_rx_rssi=0;

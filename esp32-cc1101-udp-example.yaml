@@ -1,8 +1,5 @@
 packages:
-  esp32-cc1101: 
-    url: https://github.com/juanboro/esphome-radiolib-cc1101
-    files: [esp32-cc1101.yaml] 
-
+  esp32-cc1101: !include esp32-cc1101.yaml
 
 esphome:
   name: esp32-cc1101-udp

@@ -10,7 +10,9 @@ namespace udp_broadcast {
 static const char *const TAG = "udp_broadcast";
 
 void UDPBroadcastComponent::dump_config() {
-  ESP_LOGCONFIG(TAG, "  Target IP address: %s:%d", this->addr_.c_str(), this->port_);
+  ESP_LOGCONFIG(TAG, "  Port: %u", this->port_);
+  for (const auto &address : this->addresses_)
+    ESP_LOGCONFIG(TAG, "  Address: %s", address.c_str());
 }
 
 void UDPBroadcastComponent::send_data(const char *data, size_t len) {

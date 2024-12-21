@@ -9,9 +9,15 @@ The ESP32 example includes an example mqtt dumper that can help with analyzing p
 - Use rtl_433 to decode pulses streamed to mqtt:
 ```stdbuf -o0 mosquitto_sub  -h mqtthostname -I rx -t 'esphome/rawrf/#' | rtl_433 -r ook:-```
 
+
+ New:
+```socat -u UDP4-RECV:5007 STDOUT | rtl_433 -r ook:-```
+
 ## rtl_433 decoding with ESPHome
 See [esphome-rtl_433-decoder](https://github.com/juanboro/esphome-rtl_433-decoder)
 
+# see also:
+ - Direct cc1101 support: https://github.com/esphome/esphome/pull/6300
 # based on:
 - https://github.com/dbuezas/esphome-cc1101
 - and https://github.com/NorthernMan54/rtl_433_ESP/blob/main/src/rtl_433_ESP.cpp

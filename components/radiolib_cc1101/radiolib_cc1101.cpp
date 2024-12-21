@@ -75,7 +75,7 @@ void RadiolibCC1101Component::setup_direct_mode() {
 
 int RadiolibCC1101Component::standby() {
   // standby state: gd0 is input, radio in standby
-//  _gd0_rx->setup();
+  _gd0_rx->setup();
   init_state|=radio.standby();
   state=init_state==0 ? CC1101_STANDBY : CC1101_NOINIT;
   return init_state;
@@ -83,7 +83,7 @@ int RadiolibCC1101Component::standby() {
 
 int RadiolibCC1101Component::recv() {
   // receive state: gd0 is input, radio doing receiveDirectAsync
-//  _gd0_rx->setup();
+  _gd0_rx->setup();
   init_state|=radio.receiveDirectAsync();
   state=init_state==0 ? CC1101_RECV : CC1101_NOINIT;
   return init_state;
@@ -93,7 +93,7 @@ int RadiolibCC1101Component::xmit() {
   // xmit state: gd0 is output
   // wip (need to test w/ sdr all is well)
   standby(); 
- // _gd0_tx->setup();
+  _gd0_tx->setup();
 
   init_state|=radio.transmitDirectAsync();
   state=init_state==0 ? CC1101_XMIT : CC1101_NOINIT;

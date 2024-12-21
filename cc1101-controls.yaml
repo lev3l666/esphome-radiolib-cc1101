@@ -95,7 +95,7 @@ select:
             id(cc1101_lna_gain_reduce).update();
   - platform: template
     id: cc1101_magn_target
-    name: "Average amplitude target for filter:"
+    name: "Average amplitude target for filter (MAGN_TARGET):"
     options:
       - "24 dB"
       - "27 dB"

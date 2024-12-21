@@ -1,0 +1,5 @@
+packages:
+  baseline: !include esp32-cc1101-udp-example.yaml
+
+remote_transmitter: !remove
+button: !remove

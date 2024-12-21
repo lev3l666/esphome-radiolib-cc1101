@@ -15,8 +15,8 @@ RadiolibCC1101Component = radiolib_cc1101_ns.class_(
 CONFIG_SCHEMA = (
     cv.Schema({
         cv.GenerateID(): cv.declare_id(RadiolibCC1101Component),
-        cv.Required(CONF_RX_PIN): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_TX_PIN): pins.internal_gpio_output_pin_schema,
+        cv.Optional(CONF_RX_PIN): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_TX_PIN): pins.internal_gpio_output_pin_schema,
         cv.Optional(CONF_FREQUENCY, default="433.92MHz"): cv.frequency,
         cv.Optional(CONF_FILTER, default="464kHz"): cv.frequency,
         cv.Optional('bitrate',default=5): cv.float_range(0.025,600), # 40k = 25us resolution, 5k=less noisy
@@ -31,11 +31,13 @@ CONFIG_SCHEMA = (
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
 
-    pin = await gpio_pin_expression(config[CONF_RX_PIN])
-    cg.add(var.set_rx_pin(pin))
+    if CONF_RX_PIN in config:
+        pin = await gpio_pin_expression(config[CONF_RX_PIN])
+        cg.add(var.set_rx_pin(pin))
 
-    pin = await gpio_pin_expression(config[CONF_TX_PIN])
-    cg.add(var.set_tx_pin(pin))
+    if CONF_TX_PIN in config:
+        pin = await gpio_pin_expression(config[CONF_TX_PIN])
+        cg.add(var.set_tx_pin(pin))
 
     cg.add(var.set_frequency(config[CONF_FREQUENCY]))
     cg.add(var.set_filter(config[CONF_FILTER]))

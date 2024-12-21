@@ -1,5 +1,10 @@
 packages:
   baseline: !include esp32-cc1101-udp-example.yaml
 
+remote_receiver:
+  - id: !extend rf_receiver
+    pin:
+      allow_other_uses: false
+
 remote_transmitter: !remove
 button: !remove

@@ -54,12 +54,12 @@ remote_transmitter:
 radiolib_cc1101:
   id: mycc1101
   cs_pin: 5 # CC1101 pin 4
-  rx_pin:
-    number: 32 # This is CC1101 GDO0 pin 3
-    allow_other_uses: true
-  tx_pin:
-    number: 32 # This is also GDO0
-    allow_other_uses: true
+  # rx_pin:
+  #   number: 32 # This is CC1101 GDO0 pin 3
+  #   allow_other_uses: true
+  # tx_pin:
+  #   number: 32 # This is also GDO0
+  #   allow_other_uses: true
   # other optional settings.. (use control settings to verify they work and then set)
   filter: 468khz # RX filter BW (58-812kHz)
   bitrate: 40 # bitrate (0.025-600kbps)

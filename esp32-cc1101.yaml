@@ -21,7 +21,6 @@ spi:
 # put remote_receiver first for ESP-IDF remote
 remote_receiver:
   - id: rf_receiver
-    setup_priority: 500 # make sure remote_receiver is defined before remote_transmitter if using the same pins!
     idle: 10ms
     pin:
       number: 32 # This is also GDO0
@@ -37,7 +36,6 @@ remote_receiver:
 
 remote_transmitter:
   - id: rf_transmitter
-    setup_priority: 400
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true
@@ -46,7 +44,7 @@ remote_transmitter:
       then:
         - lambda: |-
             id(mycc1101).xmit();
-            id(rf_transmitter).setup(); // currently necessary for legacy ESP-32 RMT (and doesn't work w/ new one either way)
+            //id(rf_transmitter).setup(); // currently necessary for legacy ESP-32 RMT (and doesn't work w/ new one either way)
     on_complete:
       then:
         - lambda: id(mycc1101).recv();
@@ -54,7 +52,6 @@ remote_transmitter:
     one_wire: true # should be needed for new ESP-IDF - but doesn't seem to work?
 
 radiolib_cc1101:
-  setup_priority: 399
   id: mycc1101
   cs_pin: 5 # CC1101 pin 4
   rx_pin:

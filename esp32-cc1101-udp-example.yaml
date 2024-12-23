@@ -41,7 +41,7 @@ remote_receiver:
       then:
         - lambda: |-
             int rawcount=x.size();
-            if (x.size()<10) return; // ignore noise
+            if (rawcount<10) return; // ignore noise
             char buffer[512];
 
             int j=0;

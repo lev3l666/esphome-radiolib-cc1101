@@ -1,6 +1,7 @@
 packages:
   baseline: !include esp32-cc1101-udp-example.yaml
 
+# example for testing receive standalone
 remote_receiver:
   - id: !extend rf_receiver
     pin:

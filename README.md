@@ -13,7 +13,7 @@ The ESP32 example includes an example UDP dumper that can help with analyzing pu
 See [esphome-rtl_433-decoder](https://github.com/juanboro/esphome-rtl_433-decoder)
 
 ## notes
-Transmit/Receive was verified to work with esp8266 and ESP-32 board. 
+Transmit/Receive was verified to work with esp8266 and ESP-32 board (Arduino and ESP-IDF)
 
 # see also:
  - Direct cc1101 support in ESPHOME component (no radiolib dependency): https://github.com/esphome/esphome/pull/6300

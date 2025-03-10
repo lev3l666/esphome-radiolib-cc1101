@@ -21,7 +21,7 @@ CONFIG_SCHEMA = (
     cv.Schema({
         cv.GenerateID(): cv.declare_id(UDPBroadcastComponent),
         cv.Optional(CONF_ADDRESSES, default=["255.255.255.255"]): cv.ensure_list(
-            cv.ipv4
+            cv.ipv4address,
         ),
         cv.Optional(CONF_PORT, default=5007): cv.port,
         })

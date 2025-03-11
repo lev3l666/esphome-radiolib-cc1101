@@ -36,6 +36,10 @@ remote_transmitter:
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true
+      mode: 
+        output: true
+        input: true
+        open_drain: true
       id: cc1101_gd0_xmit
 
     on_transmit:
@@ -48,7 +52,6 @@ remote_transmitter:
         - lambda: |-
             id(mycc1101).recv();
     carrier_duty_percent: 100%
-    one_wire: true # new ESP-IDF remote code - one wire mode enables proper rx/tx loopback mode
 
 radiolib_cc1101:
   id: mycc1101

@@ -25,6 +25,8 @@ remote_receiver:
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true
+      mode:
+        input: true
       id: cc1101_gd0_recv
 
     # ESP IDF new remote SPECIFIC 
@@ -38,7 +40,7 @@ remote_transmitter:
       allow_other_uses: true
       mode: 
         output: true
-        input: true
+        pullup: true
         open_drain: true
       id: cc1101_gd0_xmit
 

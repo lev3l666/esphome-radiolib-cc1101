@@ -1,6 +1,10 @@
 packages:
   esp32-cc1101: !include esp32-cc1101.yaml
 
+external_components:
+  - source: github://juanboro/esphome@mymaster
+    components: [ udp_broadcast ]
+
 esphome:
   name: esp32-cc1101-udp
   friendly_name: ESP32 cc1101 udp dump example

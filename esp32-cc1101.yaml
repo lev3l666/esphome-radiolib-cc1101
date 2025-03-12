@@ -5,11 +5,8 @@ esphome:
     - RadioLib
 
 external_components:
-  - source:
-      type: git
-      url: https://github.com/juanboro/esphome-radiolib-cc1101
-  - source: github://juanboro/esphome@mymaster
-    components: [ udp_broadcast ]
+  - source: github://juanboro/esphome-radiolib-cc1101@main
+    components: [ radiolib_cc1101 ]
 
 packages:
   cc1101_controls: !include cc1101-controls.yaml

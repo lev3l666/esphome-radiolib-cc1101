@@ -17,7 +17,6 @@ spi:
   mosi_pin: 23  # CC1001 pin 6
   miso_pin: 19  # CC1001 pin 7
 
-# put remote_receiver first for ESP-IDF remote
 remote_receiver:
   - id: rf_receiver
     idle: 10ms
@@ -42,6 +41,9 @@ remote_receiver:
     # but should always be set to at least rmt_symbols...
     receive_symbols: 448
 #    dump: raw
+
+    # Alternativly with this pr: <url> use the software-interupt remote driver:
+    use_esp32_rmt: false
 
 remote_transmitter:
   - id: rf_transmitter

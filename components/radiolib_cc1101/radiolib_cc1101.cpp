@@ -52,6 +52,8 @@ void RadiolibCC1101Component::set_registers() {
   init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL2,_REG_AGCCTRL2);
   init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL1,_REG_AGCCTRL1);
   init_state|= radio.SPIsetRegValue(RADIOLIB_CC1101_REG_AGCCTRL0,_REG_AGCCTRL0);
+
+  ESP_LOGD(TAG, "CC1101 set_registers() complete - freq, bitrate, bandwidth, registers set");
 }
 
 void RadiolibCC1101Component::setup_direct_mode() {

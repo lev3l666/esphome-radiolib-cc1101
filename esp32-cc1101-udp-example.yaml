@@ -2,7 +2,7 @@ packages:
   esp32-cc1101: !include esp32-cc1101.yaml
 
 external_components:
-  - source: github://juanboro/esphome@mymaster
+  - source: github://juanboro/esphome
     components: [ udp_broadcast ]
 
 esphome:

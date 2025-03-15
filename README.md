@@ -2,7 +2,7 @@
 Uses [Radiolib](https://github.com/jgromes/RadioLib) to enable a TI-CC1101 module as an ESPHome RF direct OOK remote receiver/transmitter.
 # Basics
 The included yaml files include configuration examples for ESP8266 and ESP32 micro-controllers.  You should start by enabling dump_raw and making sure noise isn't being received when no transmissions are occurring.  Adjusting bandwidth, data-rate, and AGC parameters can help with creating an optimal receive setup.  The example includes the ability to expose these as controls in ESPHome or HomeAssistant.  
-- More bandwidth will likely enable receiving more varying devices on the same frequency, but will increase noise and decrease range.
+- More bandwidth will likely enable receiving more varying devices on the same frequency, but will increase noise and may decrease range.
 
 ## debugging signals
 The ESP32 example includes an example UDP dumper that can help with analyzing pulse data. 

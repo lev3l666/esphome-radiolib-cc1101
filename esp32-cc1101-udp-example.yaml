@@ -17,7 +17,7 @@ wifi:
 esp32:  
   board: esp32dev
   framework:
-    # change as necessary - i find esp-idf a little less erratic
+    # change as necessary - see the notes it esp32-cc1101.yaml about arduino if you must use that platform.
     type: esp-idf
 #    type: arduino
 

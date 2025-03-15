@@ -1,6 +1,8 @@
+# This is for ESP-IDF platform
+#   To make this work on Arduino the ESP IDF specific parts below in remote_receiver need commented out.
+#   Also - transmit shared with receive on the same pin now seems broken with the current Arduiono setup - so you either need to 
+#   put xmit on a different gpio on the ESP-32 when using the Arduinio platform... or -- just set the platform the esp-idf 
 esphome:
-  platformio_options:
-    lib_ldf_mode: "deep+" # only necessary for arduino platform
   libraries:
     - RadioLib
 
@@ -83,6 +85,7 @@ radiolib_cc1101:
   reg_agcctrl1: 0x00 # agcctrol1 register setting
   reg_agcctrl2: 0xc7 # agcctrol2 register setting
 
+# it's a good idea to turn off the CC1101 receiver when doing OTA updates
 ota:
   platform: esphome
   on_begin:

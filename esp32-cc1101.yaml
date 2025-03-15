@@ -42,8 +42,8 @@ remote_receiver:
     receive_symbols: 448
 #    dump: raw
 
-    # Alternativly with this pr: <url> use the software-interupt remote driver:
-    use_esp32_rmt: false
+    # Alternativly with this pr: <url tbd> use the software-interupt remote driver:
+    #use_esp32_rmt: false
 
 remote_transmitter:
   - id: rf_transmitter

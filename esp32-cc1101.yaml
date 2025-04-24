@@ -1,11 +1,3 @@
-# This is for ESP-IDF platform
-#   To make this work on Arduino the ESP IDF specific parts below in remote_receiver need commented out.
-#   Also - transmit shared with receive on the same pin now seems broken with the current Arduiono setup - so you either need to 
-#   put xmit on a different gpio on the ESP-32 when using the Arduinio platform... or -- just set the platform the esp-idf 
-esphome:
-  libraries:
-    - RadioLib
-
 external_components:
   - source: github://juanboro/esphome-radiolib-cc1101@main
     components: [ radiolib_cc1101 ]
@@ -28,24 +20,6 @@ remote_receiver:
       mode:
         input: true
       id: cc1101_gd0_recv
-
-    # ESP IDF new remote SPECIFIC 
-    # https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html#rmt-resource-allocation
-    # https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#rmt
-    # https://esphome.io/components/remote_receiver#esp32-idf-configuration-variables
-    # the esp-32 has 2k of symbol memory (512 symbols)
-    # rmt_symbols sets mem_block_symbols in esp channel config - the esphome default will be 192 symbols/channel
-    # In this example - we max things out at 448 symbols for the receive (the transmit can recycle symbol memory - so a smaller symbol size of the default 64 is ok)
-    # note that if additional remotes are added (up to 8) - then the memory will need apportioned as necessary.  Even 448 symbols (<1000 pulses) isn't real great 
-    # for some of what we'd like to receive on the cc1101.
-    rmt_symbols: 448
-    # generally - receive_symbols only makes sense to be bigger than rmt_symbols on systems w/ dma support (not the original esp32)
-    # but should always be set to at least rmt_symbols...
-    receive_symbols: 448
-#    dump: raw
-
-    # Alternativly with this pr: <url tbd> use the software-interupt remote driver:
-    #use_esp32_rmt: false
 
 remote_transmitter:
   - id: rf_transmitter

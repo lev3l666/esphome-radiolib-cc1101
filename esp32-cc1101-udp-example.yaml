@@ -1,3 +1,7 @@
+esphome:
+  name: esp32-cc1101-udp
+  friendly_name: ESP32 cc1101 udp dump example
+
 packages:
   esp32-cc1101: !include esp32-cc1101.yaml
 
@@ -64,6 +68,24 @@ remote_receiver:
             }
             bufp+=sprintf(bufp,";end\n");
             id(udpbc).send_data(buffer,bufp-buffer);
+
+    # ESP IDF new remote SPECIFIC (comment out out Arduino platform)
+    # https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html#rmt-resource-allocation
+    # https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#rmt
+    # https://esphome.io/components/remote_receiver#esp32-idf-configuration-variables
+    # the original esp-32 has 2k of symbol memory (512 symbols)
+    # rmt_symbols sets mem_block_symbols in esp channel config - the esphome default will be 192 symbols/channel
+    # In this example - we max things out at 448 symbols for the receive (the transmit can recycle symbol memory - so a smaller symbol size of the default 64 is ok)
+    # note that if additional remotes are added (up to 8) - then the memory will need apportioned as necessary.  Even 448 symbols (<1000 pulses) isn't real great 
+    # for some of what we'd like to receive on the cc1101.
+    rmt_symbols: 448
+    # generally - receive_symbols only makes sense to be bigger than rmt_symbols on systems w/ dma support (not the original esp32)
+    # but should always be set to at least rmt_symbols...
+    receive_symbols: 448
+
+    # Alternativly with this pr: <url tbd> (or my branch: https://github.com/juanboro/esphome) -- use the software-interupt remote driver:
+    #use_esp32_rmt: false
+
 
 button:
   - platform: template

@@ -1,11 +1,3 @@
-esphome:
-  # to find SPI for radiolib
-  platformio_options:
-    lib_ldf_mode: "deep+" 
-
-  libraries:
-    - RadioLib
-
 external_components:
   - source:
       type: git

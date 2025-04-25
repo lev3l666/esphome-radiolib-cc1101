@@ -10,7 +10,8 @@
 namespace esphome {
 namespace radiolib_cc1101 {
 
-enum CCC1101_state {CC1101_NOINIT,CC1101_STANDBY,CC1101_RECV,CC1101_XMIT};
+enum CC1101_state {CC1101_NOINIT,CC1101_STANDBY,CC1101_RECV,CC1101_XMIT};
+enum CC1101Modulation {OOK_MODULATION=0, FSK_MODULATION};
 
 class RadiolibCC1101Component : public Component, public EH_RL_SPI {
   public:
@@ -23,6 +24,7 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     void set_rx_pin(InternalGPIOPin *rx_pin) { _gd0_rx = rx_pin; }
     void set_tx_pin(InternalGPIOPin *tx_pin) { _gd0_tx = tx_pin; }
     void set_frequency(float freq) { _freq=freq/1e6; }
+    void set_modulation(CC1101Modulation modulation) { _modulation=modulation; }
     void set_filter(float filter) { _bandwidth=filter/1e3; }
     void set_bitrate(float bitrate) { _bitrate=bitrate; }
     void set_reg_agcctrl0(uint8_t reg_agcctrl0) { _REG_AGCCTRL0 = reg_agcctrl0; }
@@ -35,10 +37,11 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     EH_RL_Hal* hal;
     CC1101 radio=NULL;
     int init_state=0;
-    CCC1101_state state=CC1101_NOINIT;
+    CC1101_state state=CC1101_NOINIT;
     float _freq=433.92;
+    CC1101Modulation _modulation=OOK_MODULATION;
     float _bandwidth=464;
-
+    
     // these are bandwidth specific
     u_int8_t _REG_FREND1=0xb6;
     u_int8_t _REG_TEST2=0x88;

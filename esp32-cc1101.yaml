@@ -14,6 +14,7 @@ spi:
 remote_receiver:
   - id: rf_receiver
     idle: 10ms
+    filter: 20us # Some RF sources have pretty high BW - adjust as needed
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true

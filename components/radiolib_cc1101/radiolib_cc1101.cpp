@@ -68,7 +68,7 @@ void RadiolibCC1101Component::setup_direct_mode() {
 
   set_registers();
 
-  init_state|=radio.setOOK(true); // probably not necessary
+  init_state|=radio.setOOK(_modulation==OOK_MODULATION); 
 
   // start receiving onto GDO
   init_state|= recv();

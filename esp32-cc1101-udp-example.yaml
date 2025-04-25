@@ -9,10 +9,6 @@ external_components:
   - source: github://juanboro/esphome
     components: [ udp_broadcast ]
 
-esphome:
-  name: esp32-cc1101-udp
-  friendly_name: ESP32 cc1101 udp dump example
-
 wifi:
   ssid: !secret wifi_name
   password: !secret wifi_pass

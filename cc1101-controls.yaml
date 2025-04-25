@@ -58,6 +58,20 @@ number:
     unit_of_measurement: dB
 select:
   - platform: template
+    id: cc1101_modulation
+    name: "CC1101 modulation"
+    options:
+      - "OOK (default)"
+      - "FSK"
+    lambda: |-
+      return id(cc1101_modulation).at(id(mycc1101)._modulation==esphome::radiolib_cc1101::OOK_MODULATION ? 0 : 1);
+    set_action: 
+      then:
+        - lambda: |-
+            id(mycc1101)._modulation=id(cc1101_modulation).index_of(x).value()==0 ? esphome::radiolib_cc1101::OOK_MODULATION : esphome::radiolib_cc1101::FSK_MODULATION;
+            id(mycc1101).setup_direct_mode();
+            id(cc1101_modulation).update();
+  - platform: template
     id: cc1101_dvga_gain_reduce
     name: "Reduce maximum available DVGA gain by:"
     options:

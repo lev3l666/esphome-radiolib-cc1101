@@ -37,16 +37,12 @@ tcp_server:
   port: 9000
   id: tcp
 
-radiolib_cc1101:
-  modulation: fsk
-
 remote_receiver:
   - id: !extend rf_receiver
     # TCP broadcast ook pulse data that rtl_433 can decode as input for debugging
     #
     # on the receive side: 
-    # socat -T10 - TCP:esp32-cc1101-tcp.local:9000,fork,max-children=1  | rtl_433 -r ook:-
-
+    # socat -T10 - TCP:esp32-cc1101-tcp.local:9000,fork,reuseaddr,max-children=1  | rtl_433 -r ook:-
     on_raw:
       then:
         - lambda: |-
@@ -70,9 +66,7 @@ remote_receiver:
             }
             bufp+=sprintf(bufp,";end\n");
             id(tcp).write(buffer,bufp-buffer);
-            id(tcp).disconnect();
-
-
+ 
     # ESP IDF new remote SPECIFIC (comment out out Arduino platform)
     # https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html#rmt-resource-allocation
     # https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#rmt

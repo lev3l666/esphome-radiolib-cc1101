@@ -2,7 +2,7 @@
 # socat -T600 - TCP:esp32-cc1101-tcp.local:9000,fork,reuseaddr,max-children=1  | rtl_433 -r ook:-
 
 # or keep a log for later replay and analysis...
-# socat -T600 - TCP:esp32-dev1.local:9000,fork,reuseaddr,max-children=1  | tee esp32-cc1101-log.ook | rtl_433 -r ook:-
+# socat -T600 - TCP:esp32-dev1.local:9000,fork,reuseaddr,max-children=1  | tee -a esp32-cc1101-log.ook | rtl_433 -r ook:-
 
 esphome:
   name: esp32-cc1101-tcp

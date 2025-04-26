@@ -1,3 +1,8 @@
+# on the receive side: 
+# socat -u UDP4-RECV:5009 STDOUT | rtl_433 -r ook:-
+# or keep a log for later replay and analysis...
+# socat -u UDP4-RECV:5009 STDOUT  | tee -a esp32-cc1101-log.ook | rtl_433 -r ook:-
+
 esphome:
   name: esp32-cc1101-udp
   friendly_name: ESP32 cc1101 udp dump example
@@ -27,6 +32,13 @@ logger:
   
 captive_portal:
 
+api:
+
+time:
+  # see esphome docs for more places to get time from...
+  - platform: homeassistant
+    id: timesrc
+
 web_server:
   port: 80
 
@@ -38,33 +50,37 @@ remote_receiver:
   - id: !extend rf_receiver
     # UDP broadcast ook pulse data that rtl_433 can decode as input for debugging
     #
-    # on the receive side: 
-    # socat -u UDP4-RECV:5009 STDOUT | rtl_433 -r ook:-
 
     on_raw:
       then:
         - lambda: |-
             int rawcount=x.size();
             if (rawcount<10) return; // ignore noise
+
             char buffer[512];
+            size_t bwritten=0;
+
+            bwritten+=snprintf(buffer,sizeof(buffer) - bwritten,";pulse data\n;version 1\n;timescale 1us\n;centerfreq %d Hz\n;rssi %0.1f dB\n",(uint32_t) (id(mycc1101)._freq*1e6),id(mycc1101).last_rx_rssi);
+            bwritten+=snprintf(buffer+bwritten,sizeof(buffer) - bwritten,";received ");
+            bwritten+=id(timesrc).now().strftime(buffer+bwritten,sizeof(buffer) - bwritten, "%Y-%m-%d %H:%M:%S");
+            bwritten+=snprintf(buffer+bwritten,sizeof(buffer) - bwritten,"\n");
 
             int j=0;
-            char* bufp=buffer;
             while (j<rawcount) {
               if (x[j]>0) {
-                bufp+=sprintf(bufp,"%d %d\n",x[j],(j<rawcount-1) && (x[j+1]<0) ? -x[j+1] : 10000);
+                bwritten+=snprintf(buffer+bwritten,sizeof(buffer) - bwritten,"%d %d\n",x[j],(j<rawcount-1) && (x[j+1]<0) ? -x[j+1] : 10000);
                 ++j;
               }
               ++j;
 
-              if ((bufp-buffer)>490) {
-                  id(udpbc).send_data(buffer,bufp-buffer);
-                  bufp=buffer;
+              if (bwritten>490) {
+                  id(udpbc).send_data(buffer,bwritten);
+                  bwritten=0;
               }
             }
-            bufp+=sprintf(bufp,";end\n");
-            id(udpbc).send_data(buffer,bufp-buffer);
-
+            bwritten+=snprintf(buffer+bwritten,sizeof(buffer) - bwritten,";end\n");
+            id(udpbc).send_data(buffer,bwritten);
+ 
     # ESP IDF new remote SPECIFIC (comment out out Arduino platform)
     # https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html#rmt-resource-allocation
     # https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#rmt

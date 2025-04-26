@@ -1,5 +1,5 @@
 # Alternative to udp, when tcp works and udp doesn't (i.e: WSL)
-# socat -T10 - TCP:esp32-cc1101-tcp.local:9000,fork,max-children=1  | rtl_433 -r ook:-
+# socat -T10 - TCP:esp32-cc1101-tcp.local:9000,fork,reuseaddr,max-children=1  | rtl_433 -r ook:-
 
 esphome:
   name: esp32-cc1101-tcp

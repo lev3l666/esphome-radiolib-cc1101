@@ -15,6 +15,7 @@ remote_receiver:
   - id: rf_receiver
     idle: 10ms
     filter: 20us # Some RF sources have pretty high BW - adjust as needed
+    buffer_size: 2048 # This value is pretty large... default 10k is way too large
     pin:
       number: 32 # This is also GDO0
       allow_other_uses: true

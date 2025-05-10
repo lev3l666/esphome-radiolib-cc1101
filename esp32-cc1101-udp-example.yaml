@@ -22,7 +22,7 @@ wifi:
 esp32:  
   board: esp32dev
   framework:
-    # change as necessary - see the notes it esp32-cc1101.yaml about arduino if you must use that platform.
+    # change ONLY if necessary - see the notes it esp32-cc1101.yaml about arduino if you must use that platform.
     type: esp-idf
 #    type: arduino
 
@@ -81,7 +81,9 @@ remote_receiver:
             bwritten+=snprintf(buffer+bwritten,sizeof(buffer) - bwritten,";end\n");
             id(udpbc).send_data(buffer,bwritten);
  
-    # ESP IDF new remote SPECIFIC (comment out out Arduino platform)
+    # ESP-32 Remote Handling Notes
+    # Note: These notes are specific the platform: esp-idf --- similar but different settings exist for the arudiono platform as well.
+    # You REALLY probably want to use the esp-idf platform (unless you can't)
     # https://docs.espressif.com/projects/esp-idf/en/v5.4/esp32/api-reference/peripherals/rmt.html#rmt-resource-allocation
     # https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#rmt
     # https://esphome.io/components/remote_receiver#esp32-idf-configuration-variables
@@ -93,11 +95,12 @@ remote_receiver:
     rmt_symbols: 448
     # generally - receive_symbols only makes sense to be bigger than rmt_symbols on systems w/ dma support (not the original esp32)
     # but should always be set to at least rmt_symbols...
+    # IF you have a newer/better ESP-32 device - you can make receive_symbols as large as the buffer you need, and rmt_symbols can be smaller.
     receive_symbols: 448
 
-    # Alternativly with this pr: <url tbd> (or my branch: https://github.com/juanboro/esphome) -- use the software-interupt remote driver:
+    # Alternativly with this pr: <url tbd> (or my branch: https://github.com/juanboro/esphome) -- use the software-interupt remote driver and tell it to allow rmt tx to manage the pin
     #use_esp32_rmt: false
-
+    #esp32_share_rmt_tx: true
 
 button:
   - platform: template

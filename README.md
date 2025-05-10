@@ -13,7 +13,8 @@ The ESP32 example includes an example UDP dumper that can help with analyzing pu
 See [esphome-rtl_433-decoder](https://github.com/juanboro/esphome-rtl_433-decoder)
 
 ## notes
-Transmit/Receive was verified to work with esp8266 and ESP-32 board (Arduino and ESP-IDF)
+- Transmit/Receive was verified to work with esp8266 and ESP-32 board.
+    - I cannot currently get transmit to reliably work with the Arduiono platform on esp32.  Some have gotten this to work by setting remote_transmit/receive setup ordering and several other workarounds and these at one point worked for me - but with the latest ESPhome releases I don't see them working (the older remote transmit module appears to me to always drive zero and not an open-drain output)  Current suggestions: If you need to have both transmit and receive on ESP-32 platforms, use the esp-idf platform, if you need only receive, then you can use either platform.  If you must have transmit and the arduiono platform - more work will likely be required (see the Radiolib code - you can put the RX data on GDO2 and keep the RX and TX pins seperate)
 
 # see also:
  - Direct cc1101 support in ESPHOME component (no radiolib dependency): https://github.com/esphome/esphome/pull/6300

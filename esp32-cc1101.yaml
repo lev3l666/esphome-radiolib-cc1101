@@ -1,3 +1,12 @@
+substitutions: 
+  cs:   "5"   # CC1101 pin 4
+  clk:  "18"  # CC1101 pin 5
+  mosi: "23"  # CC1101 pin 6
+  miso: "19"  # CC1101 pin 7
+  rx:   "32"  # CC1101 pin 3
+  tx:   "32"  # CC1101 pin 3
+  tx_rx_shared: "true"
+
 external_components:
   - source: github://juanboro/esphome-radiolib-cc1101@main
     components: [ radiolib_cc1101 ]
@@ -7,9 +16,9 @@ packages:
 
 spi:
   # these are the default VSPI pins to use on ESP32
-  clk_pin: 18   # CC1001 pin 5
-  mosi_pin: 23  # CC1001 pin 6
-  miso_pin: 19  # CC1001 pin 7
+  clk_pin: $clk    # CC1101 pin 5
+  mosi_pin: $mosi  # CC1101 pin 6
+  miso_pin: $miso  # CC1101 pin 7
 
 remote_receiver:
   - id: rf_receiver
@@ -17,19 +26,23 @@ remote_receiver:
     filter: 20us # Some RF sources have pretty high BW - adjust as needed
     buffer_size: 2048 # This value is pretty large... default 10k is way too large
     pin:
-      number: 32 # This is also GDO0
+      number: $rx
       allow_other_uses: true
       mode:
+        output: false
         input: true
+        pullup: $tx_rx_shared
+        open_drain: false
       id: cc1101_gd0_recv
 
 remote_transmitter:
   - id: rf_transmitter
     pin:
-      number: 32 # This is also GDO0
-      allow_other_uses: true
+      number: $tx
+      allow_other_uses: ${tx_rx_shared}
       mode: 
         output: true
+        input: true
         pullup: true
         open_drain: true
       id: cc1101_gd0_xmit
@@ -38,7 +51,6 @@ remote_transmitter:
       then:
         - lambda: |-
             id(mycc1101).xmit();
-            //id(rf_transmitter).setup(); // currently necessary for legacy ESP-32 RMT (and doesn't work w/ new one either way)
     on_complete:
       then:
         - lambda: |-
@@ -51,12 +63,12 @@ radiolib_cc1101:
 
   # optionally define rx_pin to allow monitoring rx rssi
   rx_pin:
-    number: 32 # This is CC1101 GDO0 pin 3
+    number: $rx # This is CC1101 GDO0 pin 3
     allow_other_uses: true
 
 #  other optional settings.. (use control settings to verify they work and then set)
   filter: 468khz # RX filter BW (58-812kHz)
-  bitrate: 40 # bitrate (0.025-600kbps)
+  bitrate: 10 # bitrate (0.025-600kbps)
   reg_agcctrl0: 0xb2 # agcctrol0 register setting
   reg_agcctrl1: 0x00 # agcctrol1 register setting
   reg_agcctrl2: 0xc7 # agcctrol2 register setting

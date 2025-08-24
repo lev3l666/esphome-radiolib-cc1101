@@ -5,6 +5,7 @@ from esphome import pins
 from esphome.const import *
 from esphome.cpp_helpers import gpio_pin_expression
 from esphome.core import CORE
+import os
 
 DEPENDENCIES = ["spi"]
 
@@ -39,13 +40,19 @@ CONFIG_SCHEMA = (
 )
 
 async def to_code(config):
-    cg.add_library("RadioLib",None)
 
     # When using Arduino, RadioLib includes SPI.h (even though we abstract out the SPI functions)
     # so we need RadioLib to be able to find it...
     if CORE.using_arduino:
-        cg.add_library("SPI",None)
-        cg.add_platformio_option("lib_ldf_mode", "deep+")
+        # This used to work ... but then deep+ got broken... https://github.com/esphome/esphome/issues/9672
+        #cg.add_library("SPI",None)        
+        #cg.add_platformio_option("lib_ldf_mode", "deep+")
+
+        # so now we do this...
+        prescript=os.path.join(os.path.dirname(__file__), "hack_radiolib_buildopt.py")
+        cg.add_platformio_option("extra_scripts", [f"pre:{prescript}"])
+
+    cg.add_library("RadioLib",None)
 
     var = cg.new_Pvariable(config[CONF_ID])
 

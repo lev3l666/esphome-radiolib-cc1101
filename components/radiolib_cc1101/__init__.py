@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import spi
-from esphome import pins, automation
+from esphome import pins
 from esphome.const import *
 from esphome.cpp_helpers import gpio_pin_expression
 from esphome.core import CORE
@@ -18,7 +18,7 @@ RadiolibCC1101Component = radiolib_cc1101_ns.class_(
 
 # --- Add a trigger for "on_packet" ---
 RadiolibCC1101PacketTrigger = radiolib_cc1101_ns.class_(
-    "RadiolibCC1101PacketTrigger", automation.Trigger.template()
+    "RadiolibCC1101PacketTrigger", cg.Trigger.template()
 )
 
 CONF_MODULATION = "modulation"

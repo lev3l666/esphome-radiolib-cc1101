@@ -31,17 +31,8 @@ void RadiolibCC1101Component::setup() {
 }
 
 void RadiolibCC1101Component::loop() {
-  if ((state == CC1101_RECV) && (_gd0_rx != nullptr) && (_gd0_rx->digital_read())) {
-    last_rx_rssi = getRSSI();
-
-    // Trigger callback if defined
-    if (on_packet_callback_) {
-      ESP_LOGD(TAG, "Packet event triggered (RSSI=%.1f dBm)", last_rx_rssi);
-      on_packet_callback_();
-    }
-  }
+  if ((state==CC1101_RECV)&&(_gd0_rx!=nullptr)&&(_gd0_rx->digital_read())) last_rx_rssi=getRSSI();
 }
-
 
 void RadiolibCC1101Component::dump_config(){
     ESP_LOGCONFIG(TAG, "RadioLib-cc1101 component");

@@ -7,6 +7,11 @@
 #define RADIOLIB_LOW_LEVEL 1
 #include "EHRLHal.h"
 
+#include "esphome/core/automation.h"
+#include "esphome/core/component.h"
+#include "esphome/core/helpers.h"
+
+
 namespace esphome {
 namespace radiolib_cc1101 {
 
@@ -14,6 +19,13 @@ enum CC1101_state {CC1101_NOINIT,CC1101_STANDBY,CC1101_RECV,CC1101_XMIT};
 enum CC1101Modulation {OOK_MODULATION=0, FSK_MODULATION};
 
 class RadiolibCC1101Component : public Component, public EH_RL_SPI {
+
+  public:
+  void set_on_packet_callback(std::function<void()> &&callback) { on_packet_callback_ = callback; }
+
+protected:
+  std::function<void()> on_packet_callback_;
+
   public:
     void setup() override;
     void loop() override;

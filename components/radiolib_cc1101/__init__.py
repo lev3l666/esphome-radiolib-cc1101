@@ -6,6 +6,7 @@ from esphome.const import *
 from esphome.components import event
 from esphome.cpp_helpers import gpio_pin_expression
 from esphome.core import CORE
+from esphome import automation
 import os
 
 DEPENDENCIES = ["spi"]
@@ -19,6 +20,7 @@ RadiolibCC1101Component = radiolib_cc1101_ns.class_(
 # Configuration keys
 CONF_MODULATION = "modulation"
 CONF_FILTER = "filter"
+CONF_ON_PACKET = "on_packet"
 
 # Modulation enum mapping (will be converted to the C++ enum values)
 CC1101Modulation = radiolib_cc1101_ns.enum("CC1101Modulation")
@@ -39,6 +41,7 @@ CONFIG_SCHEMA = (
         cv.Optional('reg_agcctrl0', default=0xb2): cv.hex_uint8_t,
         cv.Optional('reg_agcctrl1', default=0x00): cv.hex_uint8_t,
         cv.Optional('reg_agcctrl2', default=0xc7): cv.hex_uint8_t,
+        cv.Optional(CONF_ON_PACKET): automation.validate_automation(single=True),
     })
     .extend(cv.COMPONENT_SCHEMA)
     .extend(spi.spi_device_schema(cs_pin_required=True))
@@ -76,3 +79,12 @@ async def to_code(config):
     # Register as a normal ESPHome component and as an SPI device (cs_pin comes from spi_device_schema)
     await cg.register_component(var, config)
     await spi.register_spi_device(var, config)
+
+    # Optional on_packet automation (YAML trigger)
+    if CONF_ON_PACKET in config:
+        trigger = await automation.build_automation(
+            var,
+            [(cg.std_string, "data")],
+            config[CONF_ON_PACKET],
+        )
+        cg.add(var.set_on_packet_callback(trigger))

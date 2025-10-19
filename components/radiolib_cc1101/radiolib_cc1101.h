@@ -50,41 +50,32 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     uint8_t _REG_FIFOTHR=0x07;
 
     // AGC settings from: LSatan/SmartRC-CC1101-Driver-Lib
-    // They _generally_ seem to work well
-    // AGCCTRL2[7:6] reduce maximum available DVGA gain: disable top three gain setting
-    // AGCCTRL2[2:0] average amplitude target for filter: 42 dB
-    // AGCCTRL1[6:6] LNA priority setting: LNA2 first
     uint8_t _REG_AGCCTRL2=0xc7;
     uint8_t _REG_AGCCTRL1=0x00;
     uint8_t _REG_AGCCTRL0=0xb2;
 
-  // datarate seems to be very crtitical to be around 5.0k sometimes, but 40k or 100k seems to make more sense
-  // -- intertwined with AGC settings from smartRC below
-  // see also DN022: https://www.ti.com/lit/an/swra215e/swra215e.pdf
     int _bitrate=5;
 
     InternalGPIOPin* _gd0_rx=nullptr;
     InternalGPIOPin* _gd0_tx=nullptr;
 
-    // For RSSI rx average
     float last_rx_rssi=0;
 
     void log_status_(const char *msg) {
-    ESP_LOGD("cc1101", "[%s] Freq: %.2f MHz, Bitrate: %d kbps, RSSI: %.1f dBm", 
-             msg, _freq, _bitrate, last_rx_rssi);
-}
-     // 🔹 Nuevo: soporte de callback tipo automation
-  void set_on_packet_callback(Trigger<std::string> *trigger) { this->on_packet_trigger_ = trigger; }
+      ESP_LOGD("cc1101", "[%s] Freq: %.2f MHz, Bitrate: %d kbps, RSSI: %.1f dBm", 
+               msg, _freq, _bitrate, last_rx_rssi);
+    }
+
+    // 🔹 Nuevo: soporte de callback tipo automation
+    void set_on_packet_callback(Trigger<std::string> *trigger) { this->on_packet_trigger_ = trigger; }
+    Trigger<std::string> *get_on_packet_trigger() { return this->on_packet_trigger_; }  // ✅ añadido
 
   protected:
-     Trigger<std::string> *on_packet_trigger_{nullptr};
-
+    Trigger<std::string> *on_packet_trigger_{nullptr};
 
   private:
     void adjustBW(float bandwidth); // rx filter bw snapper
-
 };
-
 
 }  // namespace radiolib_cc1101
 }  // namespace esphome

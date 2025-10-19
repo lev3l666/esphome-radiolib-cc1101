@@ -12,12 +12,11 @@ void RadiolibCC1101Component::setup() {
   this->spi_setup();
   hal = new EH_RL_Hal(this);
 
-  // Create module and CC1101 object
   auto *mod = new Module(hal, RADIOLIB_NC, RADIOLIB_NC, RADIOLIB_NC);
   radio = new CC1101(mod);
 
   ESP_LOGD(TAG, "Calling CC1101.begin()...");
-  init_state = radio->begin();   // store in init_state, not 'state'
+  init_state = radio->begin();
 
   if (init_state == RADIOLIB_ERR_NONE) {
     ESP_LOGI(TAG, "CC1101 initialized successfully!");
@@ -42,9 +41,8 @@ void RadiolibCC1101Component::loop() {
         ESP_LOGD(TAG, "RF Activity detected: RSSI %.1f dBm", last_rx_rssi);
 
         // 🔹 Disparar evento on_packet (si hay actividad de RF válida)
-        if (this->on_packet_trigger != nullptr) {
-          std::vector<uint8_t> dummy_data;  // sin datos, solo evento
-          this->on_packet_trigger->trigger(dummy_data);
+        if (this->on_packet_trigger_ != nullptr) {
+          this->on_packet_trigger_->trigger("rf_activity");  // ✅ cambiado
         }
       }
     }

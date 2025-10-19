@@ -15,17 +15,10 @@ RadiolibCC1101Component = radiolib_cc1101_ns.class_(
     "RadiolibCC1101Component", cg.Component, spi.SPIDevice
 )
 
-# 🔹 Nuevo: clase Trigger para el evento on_packet (C++: Trigger<std::vector<uint8_t>>)
-OnPacketTrigger = radiolib_cc1101_ns.class_(
-    "OnPacketTrigger", automation.Trigger.template(cg.std_vector.template(cg.uint8))
-)
-
-# Configuration keys
 CONF_MODULATION = "modulation"
 CONF_FILTER = "filter"
 CONF_ON_PACKET = "on_packet"
 
-# Modulation enum mapping (will be converted to the C++ enum values)
 CC1101Modulation = radiolib_cc1101_ns.enum("CC1101Modulation")
 CC1101_MODULATIONS = {
     "OOK": CC1101Modulation.OOK_MODULATION,
@@ -50,23 +43,18 @@ CONFIG_SCHEMA = (
 )
 
 async def to_code(config):
-    # When using Arduino, RadioLib expects SPI.h to be available.
     if CORE.using_arduino:
         prescript = os.path.join(os.path.dirname(__file__), "hack_radiolib_buildopt.py")
         cg.add_platformio_option("extra_scripts", [f"pre:{prescript}"])
 
-    # Ensure PlatformIO will pull RadioLib
     cg.add_library("RadioLib", None)
 
-    # Create the C++ component instance
     var = cg.new_Pvariable(config[CONF_ID])
 
-    # RX pin (GDO0)
     if CONF_RX_PIN in config:
         pin = await cg.gpio_pin_expression(config[CONF_RX_PIN])
         cg.add(var.set_rx_pin(pin))
 
-    # Scalar parameters
     cg.add(var.set_frequency(config[CONF_FREQUENCY]))
     cg.add(var.set_modulation(config[CONF_MODULATION]))
     cg.add(var.set_filter(config[CONF_FILTER]))
@@ -75,12 +63,11 @@ async def to_code(config):
     cg.add(var.set_reg_agcctrl1(config['reg_agcctrl1']))
     cg.add(var.set_reg_agcctrl2(config['reg_agcctrl2']))
 
-    # Register as ESPHome component + SPI device
     await cg.register_component(var, config)
     await spi.register_spi_device(var, config)
 
-    # ✅ Correcta implementación del on_packet
+    # ✅ Implementación moderna de on_packet
     if CONF_ON_PACKET in config:
-        trigger = cg.new_Pvariable(config[CONF_ON_PACKET])
-        await automation.build_automation(trigger, [], config[CONF_ON_PACKET])
-        cg.add(var.set_on_packet_trigger(trigger))
+        await automation.build_automation(
+            var.get_on_packet_trigger(), [], config[CONF_ON_PACKET]
+        )

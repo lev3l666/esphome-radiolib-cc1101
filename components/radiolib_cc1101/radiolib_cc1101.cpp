@@ -12,15 +12,17 @@ void RadiolibCC1101Component::setup() {
   this->spi_setup();
   hal = new EH_RL_Hal(this);
 
-  // Crear módulo y objeto CC1101
+  // Create module and CC1101 object
   auto *mod = new Module(hal, RADIOLIB_NC, RADIOLIB_NC, RADIOLIB_NC);
   radio = new CC1101(mod);
 
-  init_state = radio->begin();
-  ESP_LOGI(TAG, "Radio begin() returned state=%d", init_state);
+  ESP_LOGD(TAG, "Calling CC1101.begin()...");
+  init_state = radio->begin();   // store in init_state, not 'state'
 
-  if (init_state != RADIOLIB_ERR_NONE) {
-    ESP_LOGE(TAG, "CC1101 init failed! (code %d)", init_state);
+  if (init_state == RADIOLIB_ERR_NONE) {
+    ESP_LOGI(TAG, "CC1101 initialized successfully!");
+  } else {
+    ESP_LOGE(TAG, "CC1101 init failed, code: %d", init_state);
     state = CC1101_NOINIT;
     return;
   }
@@ -45,8 +47,14 @@ void RadiolibCC1101Component::loop() {
 
 void RadiolibCC1101Component::dump_config() {
   ESP_LOGCONFIG(TAG, "RadioLib CC1101 Component");
+  ESP_LOGCONFIG(TAG, "  Frequency: %.2f MHz", _freq);
+  ESP_LOGCONFIG(TAG, "  Bitrate: %d kbps", _bitrate);
+  ESP_LOGCONFIG(TAG, "  Bandwidth: %.0f kHz", _bandwidth);
+  ESP_LOGCONFIG(TAG, "  Modulation: %s", (_modulation == OOK_MODULATION) ? "OOK" : "FSK");
+  ESP_LOGCONFIG(TAG, "  State: %d", state);
   log_status_("Init");
 }
+
 
 void RadiolibCC1101Component::set_registers() {
   init_state |= radio->setFrequency(_freq);

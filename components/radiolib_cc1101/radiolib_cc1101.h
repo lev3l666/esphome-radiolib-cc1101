@@ -14,7 +14,7 @@ namespace radiolib_cc1101 {
 enum CC1101_state {CC1101_NOINIT,CC1101_STANDBY,CC1101_RECV,CC1101_XMIT};
 enum CC1101Modulation {OOK_MODULATION=0, FSK_MODULATION};
 
-class RadiolibCC1101Component : public Component, public spi::SPIDevice, public EH_RL_SPI {
+class RadiolibCC1101Component : public Component, public spi::SPIDevice {
   public:
     void setup() override;
     void loop() override;

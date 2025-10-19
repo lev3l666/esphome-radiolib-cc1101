@@ -92,9 +92,10 @@ void RadiolibCC1101Component::setup_direct_mode() {
     init_state |= radio->setOOK(true);
     ESP_LOGI(TAG, "OOK modulation enabled");
   } else {
-    init_state |= radio->setModulationType(RADIOLIB_CC1101_MOD_FORMAT_2_FSK);
+    init_state |= radio->setModulation(RADIOLIB_CC1101_MOD_2_FSK);
     ESP_LOGI(TAG, "FSK modulation enabled");
   }
+
 
   recv();
 }

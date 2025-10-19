@@ -40,6 +40,12 @@ void RadiolibCC1101Component::loop() {
       if (rssi != -1 && rssi != 0) {
         last_rx_rssi = (last_rx_rssi * 0.8f) + (rssi * 0.2f);
         ESP_LOGD(TAG, "RF Activity detected: RSSI %.1f dBm", last_rx_rssi);
+
+        // 🔹 Disparar evento on_packet (si hay actividad de RF válida)
+        if (this->on_packet_trigger != nullptr) {
+          std::vector<uint8_t> dummy_data;  // sin datos, solo evento
+          this->on_packet_trigger->trigger(dummy_data);
+        }
       }
     }
   }

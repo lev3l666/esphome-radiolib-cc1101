@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/spi/spi.h"
+#include "esphome/core/log.h"
 #include "esphome/core/automation.h"  // 🔹 para on_packet automations
 
 

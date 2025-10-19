@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/spi/spi.h"
+#include "esphome/core/automation.h"  // 🔹 para on_packet automations
 
 
 #define RADIOLIB_LOW_LEVEL 1
@@ -72,6 +73,8 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     ESP_LOGD("cc1101", "[%s] Freq: %.2f MHz, Bitrate: %d kbps, RSSI: %.1f dBm", 
              msg, _freq, _bitrate, last_rx_rssi);
 }
+     // 🔹 Nuevo: soporte de callback tipo automation
+  Trigger<std::vector<uint8_t>> *on_packet_trigger = new Trigger<std::vector<uint8_t>>();
 
 
   private:

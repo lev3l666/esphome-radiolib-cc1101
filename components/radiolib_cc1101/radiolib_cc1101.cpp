@@ -88,13 +88,17 @@ void RadiolibCC1101Component::setup_direct_mode() {
 
   set_registers();
 
-  if (_modulation == OOK_MODULATION) {
-    init_state |= radio->setOOK(true);
-    ESP_LOGI(TAG, "OOK modulation enabled");
-  } else {
-    init_state |= radio->setModulation(RADIOLIB_CC1101_MOD_2_FSK);
-    ESP_LOGI(TAG, "FSK modulation enabled");
-  }
+if (_modulation == OOK_MODULATION) {
+  init_state |= radio->setOOK(true);
+  ESP_LOGI(TAG, "OOK modulation enabled");
+} else {
+  // Evitamos llamadas a APIs incompatibles entre versiones de RadioLib.
+  // Desactivamos OOK como indicación de modo no-OOK (FSK u otra),
+  // y dejamos que configuración fina se haga por registros si es necesario.
+  init_state |= radio->setOOK(false);
+  ESP_LOGI(TAG, "Non-OOK modulation (FSK) requested — OOK disabled (no direct FSK API called)");
+}
+
 
 
   recv();

@@ -9,7 +9,6 @@ static const char *TAG = "radiolib_cc1101.component";
 void RadiolibCC1101Component::setup() {
   ESP_LOGI(TAG, "Initializing CC1101 via SPI...");
 
-  this->spi_setup();
   hal = new EH_RL_Hal(reinterpret_cast<EH_RL_SPI*>(this));
 
   auto *mod = new Module(hal, RADIOLIB_NC, RADIOLIB_NC, RADIOLIB_NC);

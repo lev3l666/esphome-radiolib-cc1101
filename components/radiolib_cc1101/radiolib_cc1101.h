@@ -74,7 +74,10 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
              msg, _freq, _bitrate, last_rx_rssi);
 }
      // 🔹 Nuevo: soporte de callback tipo automation
-  Trigger<std::vector<uint8_t>> *on_packet_trigger = new Trigger<std::vector<uint8_t>>();
+  void set_on_packet_callback(Trigger<std::string> *trigger) { this->on_packet_trigger_ = trigger; }
+
+  protected:
+     Trigger<std::string> *on_packet_trigger_{nullptr};
 
 
   private:
@@ -85,4 +88,3 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
 
 }  // namespace radiolib_cc1101
 }  // namespace esphome
-

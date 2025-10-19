@@ -35,7 +35,7 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     float getRSSI();
 
     EH_RL_Hal* hal;
-    CC1101 radio=NULL;
+    CC1101* radio;
     int init_state=0;
     CC1101_state state=CC1101_NOINIT;
     float _freq=433.92;
@@ -43,19 +43,19 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     float _bandwidth=464;
     
     // these are bandwidth specific
-    u_int8_t _REG_FREND1=0xb6;
-    u_int8_t _REG_TEST2=0x88;
-    u_int8_t _REG_TEST1=0x31;
-    u_int8_t _REG_FIFOTHR=0x07;
+    uint8_t _REG_FREND1=0xb6;
+    uint8_t _REG_TEST2=0x88;
+    uint8_t _REG_TEST1=0x31;
+    uint8_t _REG_FIFOTHR=0x07;
 
     // AGC settings from: LSatan/SmartRC-CC1101-Driver-Lib
     // They _generally_ seem to work well
     // AGCCTRL2[7:6] reduce maximum available DVGA gain: disable top three gain setting
     // AGCCTRL2[2:0] average amplitude target for filter: 42 dB
     // AGCCTRL1[6:6] LNA priority setting: LNA2 first
-    u_int8_t _REG_AGCCTRL2=0xc7;
-    u_int8_t _REG_AGCCTRL1=0x00;
-    u_int8_t _REG_AGCCTRL0=0xb2;
+    uint8_t _REG_AGCCTRL2=0xc7;
+    uint8_t _REG_AGCCTRL1=0x00;
+    uint8_t _REG_AGCCTRL0=0xb2;
 
   // datarate seems to be very crtitical to be around 5.0k sometimes, but 40k or 100k seems to make more sense
   // -- intertwined with AGC settings from smartRC below
@@ -68,11 +68,18 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
     // For RSSI rx average
     float last_rx_rssi=0;
 
+    void log_status_(const char *msg) {
+    ESP_LOGD("cc1101", "[%s] Freq: %.2f MHz, Bitrate: %d kbps, RSSI: %.1f dBm", 
+             msg, _freq, _bitrate, last_rx_rssi);
+}
+
+
   private:
     void adjustBW(float bandwidth); // rx filter bw snapper
 
 };
 
 
-}  // namespace empty_spi_component
+}  // namespace radiolib_cc1101
 }  // namespace esphome
+

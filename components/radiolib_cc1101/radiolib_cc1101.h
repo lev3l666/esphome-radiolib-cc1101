@@ -14,7 +14,7 @@ namespace radiolib_cc1101 {
 enum CC1101_state {CC1101_NOINIT,CC1101_STANDBY,CC1101_RECV,CC1101_XMIT};
 enum CC1101Modulation {OOK_MODULATION=0, FSK_MODULATION};
 
-class RadiolibCC1101Component : public Component, public EH_RL_SPI {
+class RadiolibCC1101Component : public Component, public spi::SPIDevice, public EH_RL_SPI {
   public:
     void setup() override;
     void loop() override;
@@ -66,12 +66,12 @@ class RadiolibCC1101Component : public Component, public EH_RL_SPI {
                msg, _freq, _bitrate, last_rx_rssi);
     }
 
-    // 🔹 Nuevo: soporte de callback tipo automation
-    void set_on_packet_callback(Trigger<std::string> *trigger) { this->on_packet_trigger_ = trigger; }
-    Trigger<std::string> *get_on_packet_trigger() { return this->on_packet_trigger_; }  // ✅ añadido
+// 🔹 Nuevo: soporte de callback tipo automation
+void set_on_packet_callback(Trigger<> *trigger) { this->on_packet_trigger_ = trigger; }
+Trigger<> *get_on_packet_trigger() { return this->on_packet_trigger_; }  // ✅ añadido
 
-  protected:
-    Trigger<std::string> *on_packet_trigger_{nullptr};
+protected:
+  Trigger<> *on_packet_trigger_{nullptr};
 
   private:
     void adjustBW(float bandwidth); // rx filter bw snapper

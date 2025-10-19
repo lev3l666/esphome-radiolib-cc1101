@@ -42,7 +42,7 @@ void RadiolibCC1101Component::loop() {
 
         // 🔹 Disparar evento on_packet (si hay actividad de RF válida)
         if (this->on_packet_trigger_ != nullptr) {
-          this->on_packet_trigger_->trigger("rf_activity");  // ✅ cambiado
+          this->on_packet_trigger_->trigger();
         }
       }
     }
@@ -92,7 +92,7 @@ void RadiolibCC1101Component::setup_direct_mode() {
     init_state |= radio->setOOK(true);
     ESP_LOGI(TAG, "OOK modulation enabled");
   } else {
-    init_state |= radio->setFSK();
+    init_state |= radio->setModulationType(RADIOLIB_CC1101_MOD_FORMAT_2_FSK);
     ESP_LOGI(TAG, "FSK modulation enabled");
   }
 
